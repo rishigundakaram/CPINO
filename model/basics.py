@@ -202,3 +202,24 @@ class FourierBlock(nn.Module):
         if self.activation is not None:
             out = self.activation(out)
         return out
+
+class Model: 
+    def __init__(self, params) -> None:
+        self.model = None
+        pass
+    
+    def step(self, cur_loss): 
+        pass
+    
+    def train(self):
+        self.model.train()
+
+    def eval(self): 
+        self.model.eval()
+
+    def __call__(self, x):
+        return self.model(x)
+    
+    def save(self,path): 
+     torch.save(self.model.state_dict(), path)
+    
