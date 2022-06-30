@@ -1,13 +1,12 @@
 info:
-  competitive: false
+  competitive: true
   entity: rishigundakaram
-  group: wave1D
+  group: wave1D_only_data
   name: wave1D
   project: CPINO-wave1D
-  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
+  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_only_data/checkpoints
   save_name: wave1D-cpino-0.pt
-  tags: 
-  - None
+  tags: None
 model_1:
   activation: gelu
   fc_dim: 128
@@ -52,10 +51,10 @@ train_data:
 train_params:
   base_lr: 0.001
   batchsize: 20
-  cg_tolerance: 0.0001
-  epochs: 500
-  f_loss: 1.0
-  ic_loss: 5
+  cg_tolerance: 0.001
+  epochs: 20
+  f_loss: 0
+  ic_loss: 0
   lr_max: 0.025
   lr_min: 0.005
   milestones:
@@ -63,4 +62,4 @@ train_params:
   - 300
   - 450
   scheduler_gamma: 0.5
-  xy_loss: 10
+  xy_loss: 1

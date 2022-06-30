@@ -1,13 +1,13 @@
 info:
-  competitive: false
+  competitive: true
   entity: rishigundakaram
-  group: wave1D
+  group: wave1D_CPINO_lr_search
   name: wave1D
   project: CPINO-wave1D
-  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
-  save_name: wave1D-cpino-0.pt
+  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_CPINO_lr_search/checkpoints
+  save_name: wave1D-cpino-5.pt
   tags:
-  - wave1D_initial_test
+  - None
 model_1:
   activation: gelu
   fc_dim: 128
@@ -29,9 +29,9 @@ model_1:
   - 9
 model_2:
   activation: gelu
-  competitive_input:
-  - FNN output
-  - initial_conditions
+  competitive_output:
+  - f
+  - data
   fc_dim: 128
   layers:
   - 64
@@ -52,15 +52,15 @@ train_data:
 train_params:
   base_lr: 0.001
   batchsize: 20
-  cg_tolerance: 0.001
-  epochs: 500
-  f_loss: 1.0
-  ic_loss: 5
-  lr_max: 0.025
-  lr_min: 0.005
+  cg_tolerance: 0.0001
+  epochs: 20
+  f_loss: 0
+  ic_loss: 0
+  lr_max: 0.05
+  lr_min: 0.025
   milestones:
   - 150
   - 300
   - 450
   scheduler_gamma: 0.5
-  xy_loss: 10
+  xy_loss: 1

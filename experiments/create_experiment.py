@@ -4,20 +4,59 @@ import os
 import sys
 
 
+# param_grid = {
+#     'info' : {
+#         'competitive': [True]
+#     }
+# }
+# walltime="12:00:00"
+# experiment_name='wave1D_CPINO'
+
+# param_grid = {
+#     'info' : {
+#         'competitive': [True, False]
+#     },
+#     'train_params': {
+#         'xy_loss': [0]
+#     }
+# }
+# walltime="12:00:00"
+# experiment_name='wave1D_no_data'
+
+# param_grid = {
+#     'info' : {
+#         'competitive': [True, False]
+#     },
+#     'train_params': {
+#         'xy_loss': [1],
+#         'f_loss': [0],
+#         'ic_loss': [0]
+#     }
+# }
+# walltime="2:00:00"
+# experiment_name='wave1D_only_data'
+
 param_grid = {
     'info' : {
         'competitive': [True]
+    },
+    'train_params': {
+        'lr_min': [.05, .025, .01, .005, .001], 
+        'lr_max': [.05, .025, .01, .005, .001],
+        'epochs': [20],
+        'xy_loss': [0],
+        'f_loss': [1],
+        'ic_loss': [5]
     }
 }
-walltime="12:00:00"
-experiment_name='wave1D_CPINO'
+walltime="2:00:00"
+experiment_name='wave1D_CPINO_lr_search_no_data'
 
 base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
 experiment_dir='experiments'
 
 if sys.argv[1] == 'wave1D':
     base_config = os.path.join(base_dir, experiment_dir, 'base_configs/wave1D.yaml')
-    base_config_test = os.path.join(base_dir, 'CPINO/base_configs/Darcy-test.yaml')
 else: 
     raise ValueError('invalid pde provided as an argument')
 
@@ -89,7 +128,7 @@ config['info']['save_dir'] = os.path.join(base_dir, experiment_dir, experiment_n
 for idx, param in enumerate(params): 
     cur_config = update_config(config, param)
     cur_config['info']['project'] = f"CPINO-{pde}"
-    cur_config['info']['group'] = [experiment_name]
+    cur_config['info']['group'] = experiment_name
     cur_config['info']['save_name'] = f'{pde}-cpino-{idx}.pt'
     cur_path = os.path.join(base_dir, experiment_dir, experiment_name)
     with open(os.path.join(cur_path, f'configs/{pde}-{idx}.yaml'), 'w') as outfile:

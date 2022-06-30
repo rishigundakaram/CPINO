@@ -3,8 +3,6 @@
 wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
 wandb: WARNING Invalid value for property run_group: ['wave1D_PINO']. This will raise an error in the future.
 loading data
-torch.Size([900, 101, 4096])
-torch.Size([100, 101, 4096])
 data is loaded
 using device: cuda:0
 Traceback (most recent call last):
@@ -43,5 +41,5 @@ Traceback (most recent call last):
     raise Exception("problem") from error_seen
 Exception: problem
 srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-slurmstepd: error: *** STEP 26222485.0 ON hpc-23-28 CANCELLED AT 2022-06-27T18:07:44 DUE TO TIME LIMIT ***
-slurmstepd: error: *** JOB 26222485 ON hpc-23-28 CANCELLED AT 2022-06-27T18:07:44 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 26223732.0 ON hpc-23-28 CANCELLED AT 2022-06-27T20:56:16 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 26223732 ON hpc-23-28 CANCELLED AT 2022-06-27T20:56:16 DUE TO TIME LIMIT ***

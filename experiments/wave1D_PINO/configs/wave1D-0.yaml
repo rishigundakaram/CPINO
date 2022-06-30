@@ -1,8 +1,7 @@
 info:
   competitive: false
   entity: rishigundakaram
-  group:
-  - wave1D_PINO
+  group: wave1D_PINO
   name: wave1D
   project: CPINO-wave1D
   save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_PINO/checkpoints
@@ -30,9 +29,9 @@ model_1:
   - 9
 model_2:
   activation: gelu
-  competitive_input:
-  - FNN output
-  - initial_conditions
+  competitive_output:
+  - f
+  - data
   fc_dim: 128
   layers:
   - 64

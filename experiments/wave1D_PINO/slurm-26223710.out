@@ -3,8 +3,6 @@
 wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
 wandb: WARNING Invalid value for property run_group: ['wave1D_PINO']. This will raise an error in the future.
 loading data
-torch.Size([900, 101, 4096])
-torch.Size([100, 101, 4096])
 data is loaded
 using device: cuda:0
 Traceback (most recent call last):
@@ -19,8 +17,8 @@ Traceback (most recent call last):
   File "/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/wandb/sdk/wandb_run.py", line 648, in _make_proto_run
     run.run_group = self._group
 TypeError: ['wave1D_PINO'] has type list, but expected one of: bytes, unicode
-Problem at: /groups/tensorlab/rgundaka/code/CPINO/run.py 72 <module>
 wandb: ERROR Abnormal program exit
+Problem at: /groups/tensorlab/rgundaka/code/CPINO/run.py 72 <module>
 Traceback (most recent call last):
   File "/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/wandb/sdk/wandb_init.py", line 999, in init
     run = wi.init()
@@ -43,5 +41,5 @@ Traceback (most recent call last):
     raise Exception("problem") from error_seen
 Exception: problem
 srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-slurmstepd: error: *** STEP 26222485.0 ON hpc-23-28 CANCELLED AT 2022-06-27T18:07:44 DUE TO TIME LIMIT ***
-slurmstepd: error: *** JOB 26222485 ON hpc-23-28 CANCELLED AT 2022-06-27T18:07:44 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 26223710.0 ON hpc-24-36 CANCELLED AT 2022-06-27T19:56:29 ***
+slurmstepd: error: *** JOB 26223710 ON hpc-24-36 CANCELLED AT 2022-06-27T19:56:29 ***

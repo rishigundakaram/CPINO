@@ -20,6 +20,10 @@ class FNO(Model):
             layers=cur_params['layers'],
             activation=cur_params['activation'], 
         ).to(device)
+        self.ic_weight = params["train_params"]["ic_loss"]
+        self.data_weight = params["train_params"]["xy_loss"]
+        self.f_weight = params["train_params"]["f_loss"]
+
         self.optimizer = Adam(self.model.parameters(), betas=(0.9, 0.999),
                      lr=params['train_params']['base_lr'])
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer,
@@ -34,15 +38,7 @@ class FNO(Model):
     def schedule_step(self): 
         self.scheduler.step()
 
-    def train(self):
-        super().train()
-
-    def eval(self): 
-        super().eval()
-    
-    def __call__(self, x):
-        return super().__call__(x)
-    
+        
 
 class FNN2d(nn.Module):
     def __init__(self, modes1, modes2,

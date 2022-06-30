@@ -1,3 +1,4 @@
+from mimetypes import init
 from numpy import dtype
 import torch
 from torch.utils.data import DataLoader
@@ -48,7 +49,6 @@ class wave1Ddataset:
         ic = data['a'].to(device)
         sol = data['u'].to(device)
         Nsamples, Nt, Nx = sol.size()
-        print(sol.size())
         if Nx % sub_x != 0 or Nt % sub_t != 0: 
             raise ValueError('invalid subsampling. Subsampling must be a whole number')
         Nt = int(Nt / sub_t)
@@ -108,17 +108,6 @@ class wave1D(problem):
             shuffle=False,
         )
     
-    def loss(self, input, target, prediction, bets=None):
-        data_loss = self.abs(prediction, target)
-        f_loss, ic_loss = self.PINO_loss_wave(prediction, input[:, 0, :, 0])
-        loss = {
-            "loss": self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss, 
-            "L2 data err": data_loss,
-            "L2 f err": f_loss, 
-            "L2 ic err": ic_loss
-        }
-        return loss
-    
     def FDM_Wave(self, u, D=1, c=1.0):
         batchsize = u.size(0)
         nt = u.size(1)
@@ -143,7 +132,7 @@ class wave1D(problem):
         return Du
 
 
-    def PINO_loss_wave(self, u, u0, c=1.0):
+    def physics_truth(self, u, u0, c=1.0):
         batchsize = u.size(0)
         nt = u.size(1)
         nx = u.size(2)
@@ -154,16 +143,78 @@ class wave1D(problem):
         index_t = torch.zeros(nx,).long()
         index_x = torch.tensor(range(nx)).long()
         boundary_u = u[:, index_t, index_x]
-        loss_u = F.mse_loss(boundary_u, u0)
 
         Du = self.FDM_Wave(u, c=c)[:, :, :]
         f = torch.zeros(Du.shape, device=u.device)
-        loss_f = F.mse_loss(Du, f)
+        return u0[:, 0, :, 0], boundary_u, f, Du
 
         # loss_bc0 = F.mse_loss(u[:, :, 0], u[:, :, -1])
         # loss_bc1 = F.mse_loss((u[:, :, 1] - u[:, :, -1]) /
         #                       (2/(nx)), (u[:, :, 0] - u[:, :, -2])/(2/(nx)))
-        return loss_u, loss_f
 
+class Loss():
+    def __init__(self, config, physics_truth, p=2):
+        self.competitive = config['info']['competitive']
+        self.physics = physics_truth
+        self.ic_weight = config['train_params']['ic_loss']
+        self.f_weight = config['train_params']['f_loss']
+        self.data_weight = config['train_params']['xy_loss']
+        self.p = p
 
+    def L2(self, x, y):
+        num_examples = x.size()[0]
+        #Assume uniform mesh
+        h = 1.0 / (x.size()[1] - 1.0)
+        all_norms = h*torch.norm(x.view(num_examples,-1) - y.view(num_examples,-1), self.p, 1)
+        return torch.mean(all_norms)
     
+    def L2_physics_loss(self, u, u0): 
+        ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0)
+        ic_loss = self.L2(ic_truth, ic_pred)
+        f_loss = self.L2(f_truth, f_pred) 
+        return ic_loss, f_loss
+
+    def w_physics_loss(self, u, u0, ic_weights=None, f_weights=None): 
+        ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0)
+        if ic_weights is None: 
+            ic_loss_w = self.L2(ic_truth, ic_pred)
+        else: 
+            ic_loss_w = self.cLoss(ic_truth, ic_pred, ic_weights)
+        if f_weights is None: 
+            f_loss_w =self.L2(f_truth, f_pred)
+        else: 
+            f_loss_w = self.cLoss(f_truth, f_pred, f_weights)
+        return ic_loss_w, f_loss_w,
+
+    def cLoss(self, x, y, weights=None):
+        num_examples = x.size()[0]
+        errs_w = torch.mean(weights.view(num_examples, -1) * (x.view(num_examples, -1)-y.view(num_examples, -1)))
+
+        return errs_w
+    
+    def __call__(self, input, target, prediction):
+        output = prediction["output"]
+        loss = {}
+        if self.competitive: 
+            data_weights = prediction["data_weights"]
+            ic_weights = prediction["ic_weights"]
+            f_weights = prediction["f_weights"]
+            data_loss_w = self.cLoss(output, target, weights=data_weights)
+            ic_loss_w, f_loss_w, = self.w_physics_loss(
+                output, input, ic_weights, f_weights
+                )
+            loss = {
+                "loss": self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * data_loss_w, 
+                "weighted data loss": data_loss_w.item(),
+                "weighted f err": f_loss_w.item(), 
+                "weighted ic err": ic_loss_w.item(),
+            }
+        L2_data_loss = self.L2(target, output)
+        ic_loss, f_loss = self.L2_physics_loss(output, input)
+        loss["L2 data loss"] = L2_data_loss.item()
+        loss["L2 ic loss"] = ic_loss.item()
+        loss["L2 f loss"] = f_loss.item()
+        if not self.competitive: 
+            loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * L2_data_loss
+        return loss
+            

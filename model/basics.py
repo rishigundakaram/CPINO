@@ -213,12 +213,20 @@ class Model:
     
     def train(self):
         self.model.train()
+    
+    def schedule_step(self): 
+        pass
 
     def eval(self): 
         self.model.eval()
 
     def __call__(self, x):
         return self.model(x)
+    
+    def predict(self, x): 
+        ret = {}
+        ret["output"] = self.model(x)
+        return ret
     
     def save(self,path): 
      torch.save(self.model.state_dict(), path)

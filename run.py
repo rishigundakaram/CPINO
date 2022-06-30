@@ -2,18 +2,22 @@ from time import time
 import yaml
 import torch
 from argparse import ArgumentParser
-from data.problem import wave1D
+from data.problem import wave1D, Loss
 import wandb
 from tqdm import tqdm
 import os
 
 from model.CPINO import CPINO
 from model.FNO import FNO
+from pprint import pprint
 
 def update_loss_dict(total, cur): 
+    cur["loss"] = cur["loss"].item()
     if not total: 
+        
         cur['batches'] = 1
         return cur
+    
     for key, val in cur.items(): 
         total[key] += val
     total['batches'] += 1
@@ -31,12 +35,12 @@ def dict_to_str(dict):
     for key, value in dict.items(): 
         if '_' in key: 
             continue
-        str += f"{key}: {value.cpu():.5f} "
+        str += f"{key}: {value:.5f} "
     return str
 
 def logger(dict, run=None, train=True): 
     new = {}
-    for key, value in dict: 
+    for key, value in dict.items(): 
         if train: 
             new["train " + key] = value
         else:
@@ -81,15 +85,14 @@ if __name__ == '__main__':
     epochs = config['train_params']['epochs']
     train_loader = problem.train_loader
     test_loader = problem.test_loader
-    loss = problem.loss
+    loss = Loss(config, problem.physics_truth)
     pbar = tqdm(range(epochs), dynamic_ncols=True, smoothing=0.1)
     for ep in pbar: 
         total_loss = {}
         for x, y in train_loader: 
-            x, y = x.to(device), y.to(device)
-            output = model(x)
-            cur_loss = problem.loss(x, y, output)
-            
+            x, y = x.to(device), y.to(device)            
+            output = model.predict(x) 
+            cur_loss = loss(x, y, output)
             model.step(cur_loss)
             total_loss = update_loss_dict(total_loss, cur_loss)
         model.schedule_step()
@@ -101,15 +104,15 @@ if __name__ == '__main__':
     model.eval()
     for x, y in test_loader: 
         x, y = x.to(device), y.to(device)
-        output = model(x)
-        cur_loss = problem.loss(x, y, output)
+        output = model.predict(x)
+        cur_loss = loss(x, y, output)
         total_loss = update_loss_dict(total_loss, cur_loss)
     total_loss = loss_metrics(total_loss) 
     if args.log: 
         logger(total_loss, run, train=False)
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
     model.save(save_path)
-
+    print(total_loss)
         
 
 
