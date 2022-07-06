@@ -1,0 +1,33 @@
+/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
+loading data
+data is loaded in memory
+data is loaded in memory
+data is loaded
+using device: cuda:0
+wandb: wandb version 0.12.20 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.12.18
+wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_CPINO/wandb/run-20220702_190237-1819ct1b
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run comfy-dawn-75
+wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
+wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/1819ct1b
+  0% 0/10 [00:00<?, ?it/s]  0% 0/10 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/groups/tensorlab/rgundaka/code/CPINO/run.py", line 95, in <module>
+    cur_loss = loss(x, y, output)
+  File "/central/groups/tensorlab/rgundaka/code/CPINO/data/problem.py", line 204, in __call__
+    ic_loss_w, f_loss_w, = self.w_physics_loss(
+  File "/central/groups/tensorlab/rgundaka/code/CPINO/data/problem.py", line 179, in w_physics_loss
+    ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0)
+  File "/central/groups/tensorlab/rgundaka/code/CPINO/data/problem.py", line 146, in physics_truth
+    boundary_u = u[:, 0, :, 0]
+IndexError: too many indices for tensor of dimension 3
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.000 MB of 0.000 MB uploaded (0.000 MB deduped)wandb: \ 0.000 MB of 0.018 MB uploaded (0.000 MB deduped)wandb: | 0.018 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: / 0.018 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: - 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: \ 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: | 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: / 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: - 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: \ 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: | 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb:                                                                                
+wandb: Synced comfy-dawn-75: https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/1819ct1b
+wandb: Synced 7 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20220702_190237-1819ct1b/logs
+srun: error: hpc-22-34: task 0: Exited with exit code 1

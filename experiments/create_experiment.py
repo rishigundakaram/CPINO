@@ -4,13 +4,16 @@ import os
 import sys
 
 
-# param_grid = {
-#     'info' : {
-#         'competitive': [True]
-#     }
-# }
-# walltime="12:00:00"
-# experiment_name='wave1D_CPINO'
+param_grid = {
+    'info' : {
+        'competitive': [True]
+    },
+    'train_params' : {
+        'epochs': [10]
+    }
+}
+walltime="12:00:00"
+experiment_name='wave1D_CPINO'
 
 # param_grid = {
 #     'info' : {
@@ -36,21 +39,21 @@ import sys
 # walltime="2:00:00"
 # experiment_name='wave1D_only_data'
 
-param_grid = {
-    'info' : {
-        'competitive': [True]
-    },
-    'train_params': {
-        'lr_min': [.05, .025, .01, .005, .001], 
-        'lr_max': [.05, .025, .01, .005, .001],
-        'epochs': [20],
-        'xy_loss': [0],
-        'f_loss': [1],
-        'ic_loss': [5]
-    }
-}
-walltime="2:00:00"
-experiment_name='wave1D_CPINO_lr_search_no_data'
+# param_grid = {
+#     'info' : {
+#         'competitive': [True]
+#     },
+#     'train_params': {
+#         'lr_min': [.05, .025, .01, .005, .001], 
+#         'lr_max': [.05, .025, .01, .005, .001],
+#         'epochs': [20],
+#         'xy_loss': [0],
+#         'f_loss': [1],
+#         'ic_loss': [5]
+#     }
+# }
+# walltime="2:00:00"
+# experiment_name='wave1D_CPINO_lr_search_no_data'
 
 base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
 experiment_dir='experiments'

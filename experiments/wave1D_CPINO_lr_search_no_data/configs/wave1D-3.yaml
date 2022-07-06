@@ -31,6 +31,7 @@ model_2:
   activation: gelu
   competitive_output:
   - f
+  - ic
   - data
   fc_dim: 128
   layers:

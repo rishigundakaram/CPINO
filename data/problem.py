@@ -45,9 +45,10 @@ class problem:
 class wave1Ddataset: 
     def __init__(self, path, sub_x=None, sub_t=None) -> None:
         device = torch.device('cpu')
-        data = torch.load(path)
+        data = torch.load(path, map_location=device)
         ic = data['a'].to(device)
         sol = data['u'].to(device)
+        print("data is loaded in memory")
         Nsamples, Nt, Nx = sol.size()
         if Nx % sub_x != 0 or Nt % sub_t != 0: 
             raise ValueError('invalid subsampling. Subsampling must be a whole number')
@@ -137,12 +138,13 @@ class wave1D(problem):
         nt = u.size(1)
         nx = u.size(2)
 
+        boundary_u = u[:, 0, :, 0]
         u = u.reshape(batchsize, nt, nx)
         # lploss = LpLoss(size_average=True)
 
-        index_t = torch.zeros(nx,).long()
-        index_x = torch.tensor(range(nx)).long()
-        boundary_u = u[:, index_t, index_x]
+        # index_t = torch.zeros(nx,).long()
+        # index_x = torch.tensor(range(nx)).long()
+        
 
         Du = self.FDM_Wave(u, c=c)[:, :, :]
         f = torch.zeros(Du.shape, device=u.device)
@@ -189,7 +191,6 @@ class Loss():
     def cLoss(self, x, y, weights=None):
         num_examples = x.size()[0]
         errs_w = torch.mean(weights.view(num_examples, -1) * (x.view(num_examples, -1)-y.view(num_examples, -1)))
-
         return errs_w
     
     def __call__(self, input, target, prediction):
@@ -199,6 +200,7 @@ class Loss():
             data_weights = prediction["data_weights"]
             ic_weights = prediction["ic_weights"]
             f_weights = prediction["f_weights"]
+
             data_loss_w = self.cLoss(output, target, weights=data_weights)
             ic_loss_w, f_loss_w, = self.w_physics_loss(
                 output, input, ic_weights, f_weights

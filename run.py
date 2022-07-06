@@ -10,6 +10,7 @@ import os
 from model.CPINO import CPINO
 from model.FNO import FNO
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 def update_loss_dict(total, cur): 
     cur["loss"] = cur["loss"].item()
@@ -97,9 +98,23 @@ if __name__ == '__main__':
             total_loss = update_loss_dict(total_loss, cur_loss)
         model.schedule_step()
         total_loss = loss_metrics(total_loss)
+        if ep == 90: 
+            plt.plot(x[0, 0, :, 0].cpu())
+            plt.savefig('ic.png')
+            plt.clf()
+            plt.plot(output['output'][0, 0, :, 0].cpu().detach().numpy())
+            plt.savefig(f'ic_guess_{ep}_sim.png')
+            plt.clf()
+            plt.plot(output['ic_weights'][0, ...].cpu().detach().numpy())
+            plt.savefig(f'ic_weights_{ep}_sim.png')
+            plt.clf()
+            plt.plot(x[0, 0, :, 0].cpu().numpy() - output['output'][0, 0, :, 0].cpu().detach().numpy() )
+            plt.savefig(f'diff_{ep}_sim.png')
+            exit(1)
         if args.log: 
             logger(total_loss)
         pbar.set_description(dict_to_str(total_loss))
+    
     total_loss = {}
     model.eval()
     for x, y in test_loader: 

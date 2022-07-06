@@ -31,6 +31,7 @@ model_2:
   activation: gelu
   competitive_output:
   - f
+  - ic
   - data
   fc_dim: 128
   layers:
@@ -51,7 +52,7 @@ train_data:
   sub_x: 32
 train_params:
   base_lr: 0.001
-  batchsize: 20
+  batchsize: 1
   cg_tolerance: 0.0001
   epochs: 500
   f_loss: 1.0
