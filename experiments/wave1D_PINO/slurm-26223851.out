@@ -1,27 +1,0 @@
-/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
-  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
-loading data
-data is loaded
-using device: cuda:0
-wandb: wandb version 0.12.19 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.12.18
-wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_PINO/wandb/run-20220627_201549-3bi3g42s
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run efficient-river-1
-wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
-wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/3bi3g42s
-  0% 0/500 [00:00<?, ?it/s]  0% 0/500 [00:17<?, ?it/s]
-Traceback (most recent call last):
-  File "/groups/tensorlab/rgundaka/code/CPINO/run.py", line 97, in <module>
-    logger(total_loss)
-  File "/groups/tensorlab/rgundaka/code/CPINO/run.py", line 39, in logger
-    for key, value in dict:
-ValueError: too many values to unpack (expected 2)
-wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: - 0.000 MB of 0.000 MB uploaded (0.000 MB deduped)wandb: \ 0.000 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: | 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: / 0.016 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: - 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: \ 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: | 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: / 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: - 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb: \ 0.019 MB of 0.019 MB uploaded (0.000 MB deduped)wandb:                                                                                
-wandb: Synced efficient-river-1: https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/3bi3g42s
-wandb: Synced 7 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20220627_201549-3bi3g42s/logs
-srun: error: hpc-24-36: task 0: Exited with exit code 1

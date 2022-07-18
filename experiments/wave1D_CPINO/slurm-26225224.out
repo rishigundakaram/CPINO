@@ -1,17 +1,0 @@
-/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
-  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
-loading data
-data is loaded
-using device: cuda:0
-wandb: wandb version 0.12.19 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.12.18
-wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_CPINO/wandb/run-20220627_220936-1dob3608
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run worthy-glade-12
-wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
-wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/1dob3608
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-  0% 0/20 [00:00<?, ?it/s]slurmstepd: error: *** STEP 26225224.0 ON hpc-23-28 CANCELLED AT 2022-06-27T22:09:41 ***
-slurmstepd: error: *** JOB 26225224 ON hpc-23-28 CANCELLED AT 2022-06-27T22:09:41 ***

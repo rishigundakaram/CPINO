@@ -1,5 +1,5 @@
 info:
-  competitive: false
+  model: PINO
   entity: rishigundakaram
   group: wave1D
   name: wave1D
@@ -12,11 +12,11 @@ model_1:
   activation: gelu
   fc_dim: 128
   layers:
-  - 16
-  - 24
-  - 24
-  - 32
-  - 32
+  - 64
+  - 64
+  - 64
+  - 64
+  - 64
   modes1:
   - 15
   - 12
@@ -42,17 +42,21 @@ model_2:
   - 20
 test_data:
   offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-test.pt
+  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt
   sub_t: 1
   sub_x: 32
+  nx: 4096
+  nt: 128
 train_data:
   offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train.pt
+  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt
   sub_t: 1
   sub_x: 32
+  nx: 4096
+  nt: 100
 train_params:
   base_lr: 0.001
-  batchsize: 1
+  batchsize: 20
   cg_tolerance: 0.0001
   epochs: 500
   f_loss: 1.0

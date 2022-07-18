@@ -1,49 +1,0 @@
-/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
-  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
-loading data
-data is loaded in memory
-data is loaded in memory
-data is loaded
-using device: cuda:0
-wandb: wandb version 0.12.20 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.12.18
-wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_CPINO/wandb/run-20220702_191401-32kj78k0
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run ruby-smoke-77
-wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
-wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/32kj78k0
-  0% 0/10 [00:00<?, ?it/s]loss: 0.00289 weighted data loss: -0.00335 weighted f err: 0.01363 weighted ic err: 0.00289 L2 data loss: 0.07747 L2 ic loss: 0.00805 L2 f loss: 3.82994 :   0% 0/10 [00:34<?, ?it/s]loss: 0.00289 weighted data loss: -0.00335 weighted f err: 0.01363 weighted ic err: 0.00289 L2 data loss: 0.07747 L2 ic loss: 0.00805 L2 f loss: 3.82994 :  10% 1/10 [00:34<05:09, 34.37s/it]loss: -0.00273 weighted data loss: 0.00245 weighted f err: 0.01361 weighted ic err: -0.00273 L2 data loss: 0.07394 L2 ic loss: 0.00782 L2 f loss: 3.80642 :  10% 1/10 [01:08<05:09, 34.37s/it]loss: -0.00273 weighted data loss: 0.00245 weighted f err: 0.01361 weighted ic err: -0.00273 L2 data loss: 0.07394 L2 ic loss: 0.00782 L2 f loss: 3.80642 :  20% 2/10 [01:08<04:33, 34.17s/it]loss: 0.00099 weighted data loss: 0.00471 weighted f err: 0.01308 weighted ic err: 0.00099 L2 data loss: 0.08446 L2 ic loss: 0.00845 L2 f loss: 3.79955 :  20% 2/10 [01:43<04:33, 34.17s/it]  loss: 0.00099 weighted data loss: 0.00471 weighted f err: 0.01308 weighted ic err: 0.00099 L2 data loss: 0.08446 L2 ic loss: 0.00845 L2 f loss: 3.79955 :  30% 3/10 [01:43<04:02, 34.58s/it]loss: 0.00129 weighted data loss: 0.00083 weighted f err: 0.01279 weighted ic err: 0.00129 L2 data loss: 0.07058 L2 ic loss: 0.00763 L2 f loss: 3.81796 :  30% 3/10 [02:16<04:02, 34.58s/it]loss: 0.00129 weighted data loss: 0.00083 weighted f err: 0.01279 weighted ic err: 0.00129 L2 data loss: 0.07058 L2 ic loss: 0.00763 L2 f loss: 3.81796 :  40% 4/10 [02:16<03:24, 34.04s/it]loss: -0.00209 weighted data loss: -0.00402 weighted f err: 0.01311 weighted ic err: -0.00209 L2 data loss: 0.08091 L2 ic loss: 0.00825 L2 f loss: 3.84380 :  40% 4/10 [02:51<03:24, 34.04s/it]loss: -0.00209 weighted data loss: -0.00402 weighted f err: 0.01311 weighted ic err: -0.00209 L2 data loss: 0.08091 L2 ic loss: 0.00825 L2 f loss: 3.84380 :  50% 5/10 [02:51<02:51, 34.34s/it]loss: 0.00316 weighted data loss: -0.00370 weighted f err: 0.01365 weighted ic err: 0.00316 L2 data loss: 0.07883 L2 ic loss: 0.00813 L2 f loss: 3.84422 :  50% 5/10 [03:26<02:51, 34.34s/it]  loss: 0.00316 weighted data loss: -0.00370 weighted f err: 0.01365 weighted ic err: 0.00316 L2 data loss: 0.07883 L2 ic loss: 0.00813 L2 f loss: 3.84422 :  60% 6/10 [03:26<02:17, 34.44s/it]loss: -0.00092 weighted data loss: 0.00145 weighted f err: 0.01374 weighted ic err: -0.00092 L2 data loss: 0.07119 L2 ic loss: 0.00766 L2 f loss: 3.82314 :  60% 6/10 [03:59<02:17, 34.44s/it]loss: -0.00092 weighted data loss: 0.00145 weighted f err: 0.01374 weighted ic err: -0.00092 L2 data loss: 0.07119 L2 ic loss: 0.00766 L2 f loss: 3.82314 :  70% 7/10 [03:59<01:42, 34.21s/it]loss: 0.00071 weighted data loss: 0.00443 weighted f err: 0.01330 weighted ic err: 0.00071 L2 data loss: 0.08249 L2 ic loss: 0.00833 L2 f loss: 3.81351 :  70% 7/10 [04:35<01:42, 34.21s/it]  loss: 0.00071 weighted data loss: 0.00443 weighted f err: 0.01330 weighted ic err: 0.00071 L2 data loss: 0.08249 L2 ic loss: 0.00833 L2 f loss: 3.81351 :  80% 8/10 [04:35<01:08, 34.42s/it]loss: 0.00262 weighted data loss: 0.00149 weighted f err: 0.01298 weighted ic err: 0.00262 L2 data loss: 0.07133 L2 ic loss: 0.00767 L2 f loss: 3.82802 :  80% 8/10 [05:08<01:08, 34.42s/it]loss: 0.00262 weighted data loss: 0.00149 weighted f err: 0.01298 weighted ic err: 0.00262 L2 data loss: 0.07133 L2 ic loss: 0.00767 L2 f loss: 3.82802 :  90% 9/10 [05:08<00:34, 34.19s/it]loss: -0.00120 weighted data loss: -0.00332 weighted f err: 0.01321 weighted ic err: -0.00120 L2 data loss: 0.07723 L2 ic loss: 0.00803 L2 f loss: 3.85325 :  90% 9/10 [05:43<00:34, 34.19s/it]loss: -0.00120 weighted data loss: -0.00332 weighted f err: 0.01321 weighted ic err: -0.00120 L2 data loss: 0.07723 L2 ic loss: 0.00803 L2 f loss: 3.85325 : 100% 10/10 [05:43<00:00, 34.31s/it]loss: -0.00120 weighted data loss: -0.00332 weighted f err: 0.01321 weighted ic err: -0.00120 L2 data loss: 0.07723 L2 ic loss: 0.00803 L2 f loss: 3.85325 : 100% 10/10 [05:43<00:00, 34.31s/it]
-{'loss': 0.000941202851026901, 'weighted data loss': -0.004613390034064651, 'weighted f err': 0.013464435767382384, 'weighted ic err': 0.000941202851026901, 'L2 data loss': 0.08316935509443284, 'L2 ic loss': 0.008347632102668286, 'L2 f loss': 3.861070628166199}
-wandb: Waiting for W&B process to finish... (success).
-wandb: - 0.017 MB of 0.017 MB uploaded (0.000 MB deduped)wandb: \ 0.017 MB of 0.017 MB uploaded (0.000 MB deduped)wandb: | 0.017 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: / 0.017 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: - 0.017 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: \ 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: | 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: / 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: - 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: \ 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb: | 0.024 MB of 0.024 MB uploaded (0.000 MB deduped)wandb:                                                                                
-wandb: 
-wandb: Run history:
-wandb:       train L2 data loss ▄▃█▁▆▅▁▇▁▄
-wandb:          train L2 f loss ▅▂▁▃▇▇▄▃▅█
-wandb:         train L2 ic loss ▅▃█▁▆▅▁▇▁▄
-wandb:               train loss █▁▅▆▂█▃▅▇▃
-wandb: train weighted data loss ▂▆█▅▁▁▅█▅▂
-wandb:     train weighted f err ▇▇▃▁▃▇█▅▂▄
-wandb:    train weighted ic err █▁▅▆▂█▃▅▇▃
-wandb: 
-wandb: Run summary:
-wandb:        test L2 data loss 0.08317
-wandb:           test L2 f loss 3.86107
-wandb:          test L2 ic loss 0.00835
-wandb:                test loss 0.00094
-wandb:  test weighted data loss -0.00461
-wandb:      test weighted f err 0.01346
-wandb:     test weighted ic err 0.00094
-wandb:       train L2 data loss 0.07723
-wandb:          train L2 f loss 3.85325
-wandb:         train L2 ic loss 0.00803
-wandb:               train loss -0.0012
-wandb: train weighted data loss -0.00332
-wandb:     train weighted f err 0.01321
-wandb:    train weighted ic err -0.0012
-wandb: 
-wandb: Synced ruby-smoke-77: https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/32kj78k0
-wandb: Synced 7 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20220702_191401-32kj78k0/logs

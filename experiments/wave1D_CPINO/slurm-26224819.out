@@ -1,46 +1,0 @@
-/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
-  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
-loading data
-data is loaded
-using device: cuda:0
-wandb: wandb version 0.12.19 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.12.18
-wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_CPINO/wandb/run-20220627_214816-1gi0viga
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run earnest-universe-10
-wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
-wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/1gi0viga
-  0% 0/10 [00:00<?, ?it/s]loss: 0.00620 weighted data loss: 0.00016 weighted f err: 0.00573 weighted ic err: -0.00022 L2 data loss: 0.07070 L2 ic loss: 0.00763 L2 f loss: 2.13913 :   0% 0/10 [00:41<?, ?it/s]loss: 0.00620 weighted data loss: 0.00016 weighted f err: 0.00573 weighted ic err: -0.00022 L2 data loss: 0.07070 L2 ic loss: 0.00763 L2 f loss: 2.13913 :  10% 1/10 [00:41<06:14, 41.65s/it]loss: 0.00159 weighted data loss: -0.00017 weighted f err: -0.00003 weighted ic err: 0.00065 L2 data loss: 0.06777 L2 ic loss: 0.00746 L2 f loss: 2.75937 :  10% 1/10 [01:23<06:14, 41.65s/it]loss: 0.00159 weighted data loss: -0.00017 weighted f err: -0.00003 weighted ic err: 0.00065 L2 data loss: 0.06777 L2 ic loss: 0.00746 L2 f loss: 2.75937 :  20% 2/10 [01:23<05:35, 41.90s/it]loss: 0.00089 weighted data loss: 0.00005 weighted f err: -0.00500 weighted ic err: 0.00107 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.87713 :  20% 2/10 [02:03<05:35, 41.90s/it] loss: 0.00089 weighted data loss: 0.00005 weighted f err: -0.00500 weighted ic err: 0.00107 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.87713 :  30% 3/10 [02:03<04:46, 40.92s/it]loss: 0.01122 weighted data loss: 0.00013 weighted f err: 0.00530 weighted ic err: 0.00093 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 2.24508 :  30% 3/10 [02:42<04:46, 40.92s/it] loss: 0.01122 weighted data loss: 0.00013 weighted f err: 0.00530 weighted ic err: 0.00093 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 2.24508 :  40% 4/10 [02:42<04:02, 40.46s/it]loss: 0.00654 weighted data loss: -0.00014 weighted f err: -0.00170 weighted ic err: 0.00193 L2 data loss: 0.06768 L2 ic loss: 0.00745 L2 f loss: 2.27031 :  40% 4/10 [03:23<04:02, 40.46s/it]loss: 0.00654 weighted data loss: -0.00014 weighted f err: -0.00170 weighted ic err: 0.00193 L2 data loss: 0.06768 L2 ic loss: 0.00745 L2 f loss: 2.27031 :  50% 5/10 [03:23<03:23, 40.70s/it]loss: 0.01010 weighted data loss: 0.00003 weighted f err: -0.00292 weighted ic err: 0.00253 L2 data loss: 0.06766 L2 ic loss: 0.00745 L2 f loss: 1.53880 :  50% 5/10 [04:03<03:23, 40.70s/it] loss: 0.01010 weighted data loss: 0.00003 weighted f err: -0.00292 weighted ic err: 0.00253 L2 data loss: 0.06766 L2 ic loss: 0.00745 L2 f loss: 1.53880 :  60% 6/10 [04:03<02:41, 40.42s/it]loss: 0.01759 weighted data loss: 0.00014 weighted f err: 0.00367 weighted ic err: 0.00250 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 2.10501 :  60% 6/10 [04:43<02:41, 40.42s/it] loss: 0.01759 weighted data loss: 0.00014 weighted f err: 0.00367 weighted ic err: 0.00250 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 2.10501 :  70% 7/10 [04:43<02:01, 40.34s/it]loss: 0.01555 weighted data loss: -0.00014 weighted f err: -0.00124 weighted ic err: 0.00364 L2 data loss: 0.06768 L2 ic loss: 0.00745 L2 f loss: 1.89611 :  70% 7/10 [05:25<02:01, 40.34s/it]loss: 0.01555 weighted data loss: -0.00014 weighted f err: -0.00124 weighted ic err: 0.00364 L2 data loss: 0.06768 L2 ic loss: 0.00745 L2 f loss: 1.89611 :  80% 8/10 [05:25<01:21, 40.60s/it]loss: 0.01904 weighted data loss: 0.00006 weighted f err: -0.00307 weighted ic err: 0.00430 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.51310 :  80% 8/10 [06:04<01:21, 40.60s/it] loss: 0.01904 weighted data loss: 0.00006 weighted f err: -0.00307 weighted ic err: 0.00430 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.51310 :  90% 9/10 [06:04<00:40, 40.48s/it]loss: 0.02619 weighted data loss: 0.00009 weighted f err: 0.00210 weighted ic err: 0.00464 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.53143 :  90% 9/10 [06:44<00:40, 40.48s/it] loss: 0.02619 weighted data loss: 0.00009 weighted f err: 0.00210 weighted ic err: 0.00464 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.53143 : 100% 10/10 [06:44<00:00, 40.35s/it]loss: 0.02619 weighted data loss: 0.00009 weighted f err: 0.00210 weighted ic err: 0.00464 L2 data loss: 0.06767 L2 ic loss: 0.00745 L2 f loss: 1.53143 : 100% 10/10 [06:44<00:00, 40.45s/it]
-Traceback (most recent call last):
-  File "/groups/tensorlab/rgundaka/code/CPINO/run.py", line 107, in <module>
-    output = model(x)
-  File "/central/groups/tensorlab/rgundaka/code/CPINO/model/CPINO.py", line 44, in __call__
-    return self.Regressor(x)
-AttributeError: 'CPINO' object has no attribute 'Regressor'
-wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: - 0.017 MB of 0.017 MB uploaded (0.000 MB deduped)wandb: \ 0.017 MB of 0.017 MB uploaded (0.000 MB deduped)wandb: | 0.017 MB of 0.017 MB uploaded (0.000 MB deduped)wandb: / 0.017 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: - 0.017 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: \ 0.020 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: | 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: / 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: - 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: \ 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: | 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb: / 0.021 MB of 0.021 MB uploaded (0.000 MB deduped)wandb:                                                                                
-wandb: 
-wandb: Run history:
-wandb:       train L2 data loss █▁▁▁▁▁▁▁▁▁
-wandb:          train L2 f loss ▅█▃▅▅▁▄▃▁▁
-wandb:         train L2 ic loss █▁▁▁▁▁▁▁▁▁
-wandb:               train loss ▂▁▁▄▃▄▆▅▆█
-wandb: train weighted data loss █▁▆▇▂▅█▂▆▇
-wandb:     train weighted f err █▄▁█▃▂▇▃▂▆
-wandb:    train weighted ic err ▁▂▃▃▄▅▅▇██
-wandb: 
-wandb: Run summary:
-wandb:       train L2 data loss 0.06767
-wandb:          train L2 f loss 1.53143
-wandb:         train L2 ic loss 0.00745
-wandb:               train loss 0.02619
-wandb: train weighted data loss 9e-05
-wandb:     train weighted f err 0.0021
-wandb:    train weighted ic err 0.00464
-wandb: 
-wandb: Synced earnest-universe-10: https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/1gi0viga
-wandb: Synced 7 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20220627_214816-1gi0viga/logs
-srun: error: hpc-24-32: task 0: Exited with exit code 1

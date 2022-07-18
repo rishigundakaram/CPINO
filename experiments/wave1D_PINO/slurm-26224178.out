@@ -1,29 +1,0 @@
-/home/rgundaka/miniconda3/envs/CPINO/lib/python3.10/site-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
-  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
-wandb: Currently logged in as: rishigundakaram. Use `wandb login --relogin` to force relogin
-loading data
-data is loaded
-using device: cuda:0
-wandb: wandb version 0.12.19 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.12.18
-wandb: Run data is saved locally in /central/groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_PINO/wandb/run-20220627_210019-wxrlyfzc
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run misunderstood-water-6
-wandb: ⭐️ View project at https://wandb.ai/rishigundakaram/CPINO-wave1D
-wandb: 🚀 View run at https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/wxrlyfzc
-  0% 0/500 [00:00<?, ?it/s]  0% 0/500 [00:00<?, ?it/s]
-Traceback (most recent call last):
-  File "/groups/tensorlab/rgundaka/code/CPINO/run.py", line 92, in <module>
-    cur_loss = loss(x, y, output)
-  File "/central/groups/tensorlab/rgundaka/code/CPINO/data/problem.py", line 211, in __call__
-    L2_data_loss = self.L2(target, output)
-  File "/central/groups/tensorlab/rgundaka/code/CPINO/data/problem.py", line 169, in L2
-    all_norms = (h**(self.d/self.p))*torch.norm(x.view(num_examples,-1) - y.view(num_examples,-1), self.p, 1)
-AttributeError: 'Loss' object has no attribute 'd'
-wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: - 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: \ 0.016 MB of 0.016 MB uploaded (0.000 MB deduped)wandb: | 0.016 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: / 0.016 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: - 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: \ 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: | 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: / 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: - 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb: \ 0.020 MB of 0.020 MB uploaded (0.000 MB deduped)wandb:                                                                                
-wandb: Synced misunderstood-water-6: https://wandb.ai/rishigundakaram/CPINO-wave1D/runs/wxrlyfzc
-wandb: Synced 7 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20220627_210019-wxrlyfzc/logs
-srun: error: hpc-24-36: task 0: Exited with exit code 1

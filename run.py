@@ -2,13 +2,16 @@ from time import time
 import yaml
 import torch
 from argparse import ArgumentParser
-from data.problem import wave1D, Loss
+from train_utils.problem import wave1D, NS3D, Loss
 import wandb
 from tqdm import tqdm
 import os
 
-from model.CPINO import CPINO
-from model.FNO import FNO
+from model.Competitive import CPINO, CPINN
+from model.SAweights import SAPINN, SAPINO
+from model.PINN import PINN
+from model.PINO import PINO
+
 from pprint import pprint
 import matplotlib.pyplot as plt
 
@@ -59,19 +62,31 @@ if __name__ == '__main__':
     with open(config_file, 'r') as stream:
         config = yaml.load(stream, yaml.FullLoader)
     
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(f"using device: {device}")
+
     print('loading data')
     match config['info']['name']: 
         case "wave1D": 
             problem = wave1D(config)
+        case "NS":
+            problem = NS3D(config)
     print('data is loaded')
 
-    if config['info']['competitive']: 
-        model = CPINO(config)
-    else: model = FNO(config)
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    
-    print(f"using device: {device}")
-
+    match config['info']['model']: 
+        case "CPINO":
+            model = CPINO(config)
+        case "CPINN": 
+            model = CPINN(config)
+        case "SAPINO":
+            model = SAPINO(config)
+        case "SAPINN": 
+            model = SAPINN(config)
+        case "PINO":
+            model = PINO(config)
+        case "PINN":
+            model = PINN(config)
+        
 
     if args.log: 
         run = wandb.init(project=config['info']['project'],
@@ -86,35 +101,33 @@ if __name__ == '__main__':
     epochs = config['train_params']['epochs']
     train_loader = problem.train_loader
     test_loader = problem.test_loader
-    loss = Loss(config, problem.physics_truth)
+    if config['info']['name'] == 'NS': 
+        loss = Loss(config, problem.physics_truth, forcing=problem.train_forcing, 
+            v=problem.v, t_interval=problem.train_t_interval)
+    else: 
+         loss = Loss(config, problem.physics_truth)
     pbar = tqdm(range(epochs), dynamic_ncols=True, smoothing=0.1)
-    for ep in pbar: 
+    while True: 
         total_loss = {}
-        for x, y in train_loader: 
-            x, y = x.to(device), y.to(device)            
+        for idx, (x, y) in enumerate(train_loader): 
+            x, y = x.to(device), y.to(device) 
+            # print(f'data loaded, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
             output = model.predict(x) 
+            # print(f'model predicted, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
             cur_loss = loss(x, y, output)
+            # print(f'loss calculated, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
             model.step(cur_loss)
+            # print(f'step done, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
             total_loss = update_loss_dict(total_loss, cur_loss)
         model.schedule_step()
         total_loss = loss_metrics(total_loss)
-        if ep == 90: 
-            plt.plot(x[0, 0, :, 0].cpu())
-            plt.savefig('ic.png')
-            plt.clf()
-            plt.plot(output['output'][0, 0, :, 0].cpu().detach().numpy())
-            plt.savefig(f'ic_guess_{ep}_sim.png')
-            plt.clf()
-            plt.plot(output['ic_weights'][0, ...].cpu().detach().numpy())
-            plt.savefig(f'ic_weights_{ep}_sim.png')
-            plt.clf()
-            plt.plot(x[0, 0, :, 0].cpu().numpy() - output['output'][0, 0, :, 0].cpu().detach().numpy() )
-            plt.savefig(f'diff_{ep}_sim.png')
-            exit(1)
         if args.log: 
             logger(total_loss)
         pbar.set_description(dict_to_str(total_loss))
-    
+    if config['info']['name'] == 'NS': 
+        loss = Loss(config, problem.physics_truth, forcing=problem.test_forcing, 
+            v=problem.v, t_interval=problem.test_t_interval)
+    print(total_loss)
     total_loss = {}
     model.eval()
     for x, y in test_loader: 
@@ -127,7 +140,6 @@ if __name__ == '__main__':
         logger(total_loss, run, train=False)
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
     model.save(save_path)
-    print(total_loss)
         
 
 

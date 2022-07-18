@@ -7,7 +7,7 @@ info:
   save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_PINO/checkpoints
   save_name: wave1D-cpino-0.pt
   tags:
-  - wave1D_initial_test
+  - None
 model_1:
   activation: gelu
   fc_dim: 128
@@ -31,6 +31,7 @@ model_2:
   activation: gelu
   competitive_output:
   - f
+  - ic
   - data
   fc_dim: 128
   layers:
@@ -52,9 +53,9 @@ train_data:
 train_params:
   base_lr: 0.001
   batchsize: 20
-  cg_tolerance: 0.001
-  epochs: 500
-  f_loss: 1.0
+  cg_tolerance: 0.0001
+  epochs: 300
+  f_loss: 1
   ic_loss: 5
   lr_max: 0.025
   lr_min: 0.005
@@ -63,4 +64,4 @@ train_params:
   - 300
   - 450
   scheduler_gamma: 0.5
-  xy_loss: 10
+  xy_loss: 0
