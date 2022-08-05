@@ -176,7 +176,7 @@ class WaveEq1D():
 
 if __name__ == "__main__": 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    Nsamples = 1
+    Nsamples = 100
     dim = 1 
     Nx = 4096
     Nt = 100
@@ -191,4 +191,4 @@ if __name__ == "__main__":
     wave_eq = WaveEq1D(Nx=Nx, c=c, dt=dt, device=device)
     U = vmap(wave_eq.wave_driver, in_dims=(0, None))(U0, save_int)
 
-    torch.save({"a": U0, "u": U}, '../wave1D/wave1D-train-1s.pt')
+    torch.save({"a": U0, "u": U}, '../wave1D/wave1D-valid.pt')

@@ -185,20 +185,24 @@ def linspace(a, b, num):
 # }
 
 
+experiment_file='SAPINO_NS3D.yaml'
+walltime="9:00:00"
+experiment_name='SAPINO_NS3D'
 
 base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
 experiment_dir='experiments'
-config_file = os.path.join(base_dir, experiment_dir, 'experiment_configs/Single_IC_1D_Wave.yaml')
-walltime="0:10:00"
-experiment_name='single_ic'
+config_file = os.path.join(base_dir, experiment_dir, 'experiment_configs/',experiment_file)
+
 
 with open(config_file, 'r') as stream:
         config_file = yaml.load(stream, yaml.FullLoader)
 
 if sys.argv[1] == 'wave1D':
     base_config = os.path.join(base_dir, experiment_dir, 'base_configs/wave1D.yaml')
-elif sys.argv[1] == 'NS3D': 
+elif sys.argv[1] == 'NS3D-500': 
     base_config = os.path.join(base_dir, experiment_dir, 'base_configs/Re500-1s.yaml')
+elif sys.argv[1] == 'NS3D-100': 
+    base_config = os.path.join(base_dir, experiment_dir, 'base_configs/Re100-05s.yaml')
 else: 
     raise ValueError('invalid pde provided as an argument')
 

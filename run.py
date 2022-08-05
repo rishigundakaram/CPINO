@@ -14,6 +14,7 @@ from model.PINO import PINO
 
 from pprint import pprint
 import matplotlib.pyplot as plt
+from time import time
 
 def update_loss_dict(total, cur): 
     cur["loss"] = cur["loss"].item()
@@ -42,16 +43,38 @@ def dict_to_str(dict):
         str += f"{key}: {value:.5f} "
     return str
 
-def logger(dict, run=None, train=True): 
+def logger(dict, run=None, prefix='train'): 
     new = {}
     for key, value in dict.items(): 
-        if train: 
-            new["train " + key] = value
-        else:
-            run.summary["test " + key] = value
-    if train: 
+        new[prefix + ' ' + key] = value
+        if prefix == 'test': 
+            run.summary[prefix + ' ' + key] = value
+    if prefix != 'test': 
         wandb.log(new)
     return None
+
+def eval_loss(loader, model, loss): 
+    total_loss = {}
+    model.eval()
+    for x, y in loader: 
+        x, y = x.to(device), y.to(device)
+        output = model.predict(x)
+        cur_loss = loss(x, y, output)
+        total_loss = update_loss_dict(total_loss, cur_loss)
+    total_loss = loss_metrics(total_loss) 
+    return total_loss
+
+def check_early_stopping(prev_metric, cur_metric, cur_epoch, min_epochs, cur_patience, patience, delta): 
+    flag = 0
+    if prev_metric is None: 
+        pass
+    elif cur_epoch > min_epochs and (cur_metric > prev_metric or prev_metric - cur_metric > delta): 
+        cur_patience -= 1
+        if cur_patience == 0: 
+            flag = 1
+    else: 
+        cur_patience = patience
+    return flag, cur_metric, cur_patience 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Basic paser')
@@ -101,43 +124,74 @@ if __name__ == '__main__':
     epochs = config['train_params']['epochs']
     train_loader = problem.train_loader
     test_loader = problem.test_loader
+    if 'valid_data' in config.keys(): 
+        valid_loader = problem.valid_loader
+        valid_error = None
+    if 'early_stopping' in config.keys() and config['early_stopping']['use']:   
+        patience = config['early_stopping']['patience']
+        min_epochs = config['early_stopping']['min_epochs']
+        delta = config['early_stopping']['delta']
+        prev_metric = None
+        cur_patience = patience
+
     if config['info']['name'] == 'NS': 
         loss = Loss(config, problem.physics_truth, forcing=problem.train_forcing, 
             v=problem.v, t_interval=problem.train_t_interval)
     else: 
          loss = Loss(config, problem.physics_truth)
     pbar = tqdm(range(epochs), dynamic_ncols=True, smoothing=0.1)
-    while True: 
+    start_time = time()
+    runtime_min = config['info']['walltime']
+    
+    for ep in pbar: 
         total_loss = {}
         for idx, (x, y) in enumerate(train_loader): 
             x, y = x.to(device), y.to(device) 
-            # print(f'data loaded, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
+            # print(f"after load: {1e-9*torch.cuda.memory_allocated()}")
             output = model.predict(x) 
-            # print(f'model predicted, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
+            # print(f"after predict: {1e-9*torch.cuda.memory_allocated()}")
             cur_loss = loss(x, y, output)
-            # print(f'loss calculated, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
+            # print(f"after loss: {1e-9*torch.cuda.memory_allocated()}")
             model.step(cur_loss)
-            # print(f'step done, memory used: {1e-9*torch.cuda.memory_allocated(device)} gigs')
+            # print(f"after step: {1e-9*torch.cuda.memory_allocated()}")
             total_loss = update_loss_dict(total_loss, cur_loss)
+            # print(f"after update: {1e-9*torch.cuda.memory_allocated()}")
+            # if idx == 3: 
+            #     exit(1)
+        # print(f"after epoch: {1e-9*torch.cuda.memory_allocated()}")
         model.schedule_step()
         total_loss = loss_metrics(total_loss)
         if args.log: 
-            logger(total_loss)
+            logger(total_loss, prefix='train')
         pbar.set_description(dict_to_str(total_loss))
+        elapsed = time() - start_time
+        if runtime_min is not None and elapsed > runtime_min * 60: 
+            break
+        
+        if 'valid_data' in config.keys():
+            valid_loss = eval_loss(problem.valid_loader, model, loss)
+            if args.log:
+                logger(valid_loss, prefix='valid')
+
+            if 'early_stopping' in config.keys() and config['early_stopping']['use']:    
+                cur_metric = valid_loss['L2 data loss']
+                flag, prev_metric, cur_patience = check_early_stopping(
+                    prev_metric, cur_metric, 
+                    ep, min_epochs, 
+                    cur_patience, patience, 
+                    delta)
+                if flag: 
+                    break
+
     if config['info']['name'] == 'NS': 
         loss = Loss(config, problem.physics_truth, forcing=problem.test_forcing, 
             v=problem.v, t_interval=problem.test_t_interval)
-    print(total_loss)
-    total_loss = {}
-    model.eval()
-    for x, y in test_loader: 
-        x, y = x.to(device), y.to(device)
-        output = model.predict(x)
-        cur_loss = loss(x, y, output)
-        total_loss = update_loss_dict(total_loss, cur_loss)
-    total_loss = loss_metrics(total_loss) 
+
+    test_loss = eval_loss(problem.test_loader, model, loss)
+
     if args.log: 
-        logger(total_loss, run, train=False)
+        logger(total_loss, run, prefix='test')
+    
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
     model.save(save_path)
         

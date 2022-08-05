@@ -17,6 +17,16 @@ class CPINO(Model):
         model_1_params = params['model_1']
         model_2_params = params['model_2']
         self.dim = 4 if 'modes3' in model_1_params else 3
+        self.formulation = params['info']['formulation']
+        # if 'depth' in model_1_params.keys(): 
+        #     m1_depth = model_1_params['depth']
+        #     m1_width = model_1_params['width']
+        #     m1_modes = model_1_params['modes']
+            
+        if self.formulation == 'lagrangian':
+            discriminator_out_dim = 2 
+        else: 
+            discriminator_out_dim = 3
         if self.dim == 4: 
             self.model = FNN3d(
                 modes1=model_1_params['modes1'], 
@@ -34,7 +44,7 @@ class CPINO(Model):
                 fc_dim=model_2_params['fc_dim'], 
                 layers=model_2_params['layers'],
                 in_dim=self.dim, 
-                out_dim=2,
+                out_dim=discriminator_out_dim,
             ).to(device)
         else:
             self.model = FNN2d(
@@ -52,7 +62,7 @@ class CPINO(Model):
                 layers=model_2_params['layers'],
                 activation=model_2_params['activation'],
                 in_dim=3,
-                out_dim=2,
+                out_dim=discriminator_out_dim,
             ).to(device)
 
         train_params = params['train_params']
@@ -77,17 +87,21 @@ class CPINO(Model):
         self.model.eval()
         self.Discriminator.eval()
 
-    def predict(self, x, dof=1): 
+    def predict(self, x): 
         out = self.model(x)
         out_w = self.Discriminator(x)
         ret = {}
         ret["output"] = out
         if self.dim == 3: 
             ret["ic_weights"] = out_w[..., 0,:,0]
-            ret["f_weights"] = out_w[..., 1:-dof, :, 1]
+            ret["f_weights"] = out_w[..., 1:-1, :, 1]
+            if self.formulation == 'competitive':
+                ret["data_weights"] = out_w[..., :, 2]
         else: 
             ret["ic_weights"] = out_w[..., 0,0]
             ret["f_weights"] = out_w[..., 1:-1, 1]
+            if self.formulation == 'competitive':
+                ret["data_weights"] = out_w[..., :, 2]
         return ret
 
 class CPINN(Model): 

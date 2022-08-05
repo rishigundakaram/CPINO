@@ -32,9 +32,9 @@ class SAPINN(Model):
         if 'modes3' in cur_params: 
             self.model = simpleLinear(indim=4, outdim=1, layers=cur_params['layers']).to(device)
             self.weight_model = SAWeights(
-                dims=3, 
+                dims=4, 
                 nx=data_params['nx'],
-                nt=data_params['nt'],
+                nt=int(data_params['nt']*data_params['time_interval']),
                 sub_x=data_params['sub_x'],
                 sub_t=data_params['sub_t']
                 ).to(device)
@@ -43,7 +43,7 @@ class SAPINN(Model):
             self.weight_model = SAWeights(
                 dims=3, 
                 nx=data_params['nx'],
-                nt=data_params['nt'],
+                nt=data_params['nt']*data_params['time_interval'],
                 sub_x=data_params['sub_x'],
                 sub_t=data_params['sub_t']
                 ).to(device)
@@ -102,9 +102,9 @@ class SAPINO(Model):
                 in_dim=4, 
             ).to(device)
             self.weight_model = SAWeights(
-                dims=3, 
+                dims=4, 
                 nx=data_params['nx'],
-                nt=data_params['nt'],
+                nt=int(data_params['nt']*data_params['time_interval']),
                 sub_x=data_params['sub_x'],
                 sub_t=data_params['sub_t']
                 ).to(device)

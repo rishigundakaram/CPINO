@@ -1,11 +1,13 @@
 info:
-  model: PINO
+  model: CPINO
   entity: rishigundakaram
-  group: wave1D
+  group: multi_ic_wave1D_param_search
   name: wave1D
   project: CPINO-wave1D
   save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
   save_name: wave1D-cpino-0.pt
+  walltime: 30
+  formulation: competitive
   tags: 
   - None
 model_1:
@@ -42,30 +44,39 @@ model_2:
   - 20
 test_data:
   offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt
+  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train.pt
   sub_t: 1
   sub_x: 32
   nx: 4096
   nt: 128
 train_data:
   offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt
+  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-test.pt
+  sub_t: 1
+  sub_x: 32
+  nx: 4096
+  nt: 100
+valid_data:
+  offset: None
+  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-valid.pt
   sub_t: 1
   sub_x: 32
   nx: 4096
   nt: 100
 train_params:
   base_lr: 0.001
-  batchsize: 20
+  batchsize: 1
   cg_tolerance: 0.0001
-  epochs: 500
+  epochs: 10000
   f_loss: 1.0
   ic_loss: 5
   lr_max: 0.025
   lr_min: 0.005
-  milestones:
-  - 150
-  - 300
-  - 450
+  acgd_beta: .99
   scheduler_gamma: 0.5
-  xy_loss: 10
+  xy_loss: 0
+early_stopping: 
+  minutes: 5
+  patience: 2
+  delta: .001
+  use: false

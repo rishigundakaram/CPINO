@@ -94,7 +94,7 @@ class FNN2d(nn.Module):
         elif activation == 'gelu':
             self.activation = F.gelu
         elif activation == 'relu':
-            self.activation == F.relu
+            self.activation = F.relu
         else:
             raise ValueError(f'{activation} is not supported')
 
