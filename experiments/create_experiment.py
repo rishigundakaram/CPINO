@@ -185,12 +185,13 @@ def linspace(a, b, num):
 # }
 
 
-experiment_file='SAPINO_NS3D.yaml'
-walltime="9:00:00"
-experiment_name='SAPINO_NS3D'
+experiment_file='PINO_NS3D_Re500.yaml'
+walltime="11:00:00"
+experiment_name='PINO_NS3D_Re500'
 
 base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
-experiment_dir='experiments'
+experiment_dir='experiments/'
+run_dir = 'runs'
 config_file = os.path.join(base_dir, experiment_dir, 'experiment_configs/',experiment_file)
 
 
@@ -250,7 +251,7 @@ f"""#!/bin/bash
 #SBATCH --mail-type=FAIL"""
             )
             file.write('\n')
-            train_str =  f'python {os.path.join(base_dir, "run.py")} --log --config_path {os.path.join(base_dir, experiment_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
+            train_str =  f'python {os.path.join(base_dir, "run.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
             file.write(f"{train_str}\n")
     sh_path = os.path.join(path, 'run.sh')
     with open(sh_path, 'w+') as run: 
@@ -259,14 +260,14 @@ f"""#!/bin/bash
     os.system(f'chmod +x {sh_path}')
 
 
-if not os.path.exists(os.path.join(base_dir, experiment_dir, experiment_name)):
-    os.mkdir(os.path.join(base_dir, experiment_dir, experiment_name))
-if not os.path.exists(os.path.join(base_dir, experiment_dir, experiment_name, 'configs')):
-    os.mkdir(os.path.join(base_dir, experiment_dir, experiment_name, 'configs'))
-if not os.path.exists(os.path.join(base_dir, experiment_dir, experiment_name, 'checkpoints')): 
-    os.mkdir(os.path.join(base_dir, experiment_dir, experiment_name, 'checkpoints'))
-if not os.path.exists(os.path.join(base_dir, experiment_dir, experiment_name, 'slurm')): 
-    os.mkdir(os.path.join(base_dir, experiment_dir, experiment_name, 'slurm'))
+if not os.path.exists(os.path.join(base_dir, experiment_dir, run_dir, experiment_name)):
+    os.mkdir(os.path.join(base_dir, experiment_dir, run_dir, experiment_name))
+if not os.path.exists(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'configs')):
+    os.mkdir(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'configs'))
+if not os.path.exists(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'checkpoints')): 
+    os.mkdir(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'checkpoints'))
+if not os.path.exists(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'slurm')): 
+    os.mkdir(os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'slurm'))
 
 params = []
 for param_grid in config_file: 
@@ -274,18 +275,18 @@ for param_grid in config_file:
 with open(base_config, 'r') as stream: 
     config = yaml.load(stream, yaml.FullLoader)
 
-config['info']['save_dir'] = os.path.join(base_dir, experiment_dir, experiment_name, 'checkpoints')
+config['info']['save_dir'] = os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'checkpoints')
 for idx, param in enumerate(params): 
     cur_config = update_config(config, param)
     cur_config['info']['project'] = f"CPINO-{pde}"
     cur_config['info']['group'] = experiment_name
     cur_config['info']['save_name'] = f'{pde}-cpino-{idx}.pt'
-    cur_path = os.path.join(base_dir, experiment_dir, experiment_name)
+    cur_path = os.path.join(base_dir, experiment_dir, run_dir, experiment_name)
     with open(os.path.join(cur_path, f'configs/{pde}-{idx}.yaml'), 'w') as outfile:
             yaml.dump(cur_config, outfile)
     
 
-slurm_path = os.path.join(base_dir, experiment_dir, experiment_name)
+slurm_path = os.path.join(base_dir, experiment_dir, run_dir, experiment_name)
 create_sh(slurm_path, params, time=walltime, name=experiment_name)    
 # print(f'python {os.path.join(base_dir, "train_operator.py")} --log --config_path {os.path.join(base_dir, experiment_dir, "train/Darcy-train")}-{idx}.yaml')
 # print(f'python {os.path.join(base_dir, "eval_operator.py")} --log --config_path {os.path.join(base_dir, experiment_dir, "train/Darcy-test")}-{idx}.yaml')

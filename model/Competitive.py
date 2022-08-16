@@ -1,3 +1,4 @@
+from itertools import chain
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,10 +19,6 @@ class CPINO(Model):
         model_2_params = params['model_2']
         self.dim = 4 if 'modes3' in model_1_params else 3
         self.formulation = params['info']['formulation']
-        # if 'depth' in model_1_params.keys(): 
-        #     m1_depth = model_1_params['depth']
-        #     m1_width = model_1_params['width']
-        #     m1_modes = model_1_params['modes']
             
         if self.formulation == 'lagrangian':
             discriminator_out_dim = 2 
@@ -153,72 +150,93 @@ class CPINN(Model):
             ret["f_weights"] = out_w[..., 1:-1, 2]
         return ret
     
+class CPINO_SPLIT(Model): 
+    def __init__(self, params) -> None:
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        model_1_params = params['model_1']
+        model_2_params = params['model_2']
+        model_3_params = params['model_3']
+        model_4_params = params['model_4']
+        self.dim = 4 if 'modes3' in model_1_params else 3
+        self.formulation = params['info']['formulation']
+        if self.dim == 4: 
+            self.model = FNN3d(
+                modes1=model_1_params['modes1'], 
+                modes2=model_1_params['modes2'], 
+                modes3=model_1_params['modes3'], 
+                fc_dim=model_1_params['fc_dim'], 
+                layers=model_1_params['layers'],
+                in_dim=self.dim, 
+                out_dim=1
+            ).to(device)
+            self.f_discriminator = FNN3d(
+                modes1=model_2_params['modes1'], 
+                modes2=model_2_params['modes2'], 
+                modes3=model_2_params['modes3'], 
+                fc_dim=model_2_params['fc_dim'], 
+                layers=model_2_params['layers'],
+                in_dim=4, 
+                out_dim=1,
+            ).to(device)
+            self.ic_discriminator = FNN2d(
+                modes1=model_3_params['modes1'], 
+                modes2=model_3_params['modes2'], 
+                fc_dim=model_3_params['fc_dim'], 
+                layers=model_3_params['layers'],
+                activation=model_3_params['activation'],
+                in_dim=3,
+            ).to(device)
+            max_params = chain(self.f_discriminator.parameters(), self.ic_discriminator.parameters())
+            if self.formulation == 'competitive': 
+                self.data_discriminator = FNN3d(
+                    modes1=model_4_params['modes1'], 
+                    modes2=model_4_params['modes2'], 
+                    modes3=model_4_params['modes3'], 
+                    fc_dim=model_4_params['fc_dim'], 
+                    layers=model_4_params['layers'],
+                    in_dim=4, 
+                    out_dim=1,
+                ).to(device)
+                max_params = chain(max_params, self.data_discriminator.parameters())
+        else:
+            raise ValueError('Can\'t use the split method on a 2D problem')
 
-# class CPINO(Model): 
-#     def __init__(self, params) -> None:
-#         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-#         model_1_params = params['model_1']
-#         self.model = FNN2d(
-#             modes1=model_1_params['modes1'], 
-#             modes2=model_1_params['modes2'], 
-#             fc_dim=model_1_params['fc_dim'], 
-#             layers=model_1_params['layers'],
-#             activation=model_1_params['activation'], 
-#         ).to(device)
-        
-#         model_2_params = params['model_2']
-#         out_dim = len(model_2_params['competitive_output'])
-#         self.Discriminator = FNN2d(
-#             modes1=model_2_params['modes1'], 
-#             modes2=model_2_params['modes2'], 
-#             fc_dim=model_2_params['fc_dim'], 
-#             layers=model_2_params['layers'],
-#             activation=model_2_params['activation'],
-#             in_dim=3,
-#             out_dim=out_dim,
-#         ).to(device)
-
-#         self.optimizer_max = NAdam(self.Discriminator.parameters(), betas=(0.9, 0.999),
-#                      lr=params['train_params']['lr_max'])
-#         self.scheduler_max = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_max,
-#                                                      milestones=params['train_params']['milestones'],
-#                                                      gamma=params['train_params']['scheduler_gamma'])
-
-#         self.optimizer_min = Adam(self.model.parameters(), betas=(0.9, 0.999),
-#                      lr=params['train_params']['lr_min'])
-#         self.scheduler_min = torch.optim.lr_scheduler.MultiStepLR(self.optimizer_min,
-#                                                      milestones=params['train_params']['milestones'],
-#                                                      gamma=params['train_params']['scheduler_gamma'])
-            
-#     def __call__(self, x):
-#         return self.model(x)
-
-#     def step(self, loss): 
-#         loss["loss"].backward()
-#         self.optimizer_max.step() 
-#         self.optimizer_max.zero_grad()
-#         self.optimizer_min.step() 
-#         self.optimizer_min.zero_grad()
-
-#     def train(self): 
-#         self.model.train()
-#         self.Discriminator.train()
+        train_params = params['train_params']
+        self.optimizer = ACGD(max_params=max_params, 
+                        min_params=self.model.parameters(), 
+                        lr_min=train_params['lr_min'], 
+                        lr_max=train_params['lr_max'], 
+                        tol=train_params["cg_tolerance"])
     
-#     def eval(self):
-#         self.model.eval()
-#         self.Discriminator.eval()
+    def __call__(self, x):
+        return self.model(x)
 
-#     def predict(self, x, dof=1): 
-#         out = self.model(x)
-#         out_w = self.Discriminator(x)
-#         ret = {}
-#         ret["output"] = out
-#         ret["data_weights"] = out_w[..., 0]
-#         ret["ic_weights"] = out_w[..., 0,:,1]
-#         ret["f_weights"] = out_w[..., 1:-dof, :, 2]
-#         return ret
+    def step(self, loss):
+        self.optimizer.step(loss=loss["loss"])
+        self.optimizer.zero_grad()
 
+    def train(self): 
+        self.model.train()
+        self.ic_discriminator.train()
+        self.f_discriminator.train()
+        if self.formulation == 'competitive': 
+            self.data_discriminator.train()
+    
+    def eval(self):
+        self.model.eval()
+        self.ic_discriminator.eval()
+        self.f_discriminator.eval()
+        if self.formulation == 'competitive': 
+            self.data_discriminator.eval()
 
+    def predict(self, x, dof=1): 
+        out = self.model(x)
+        ret = {}
+        ret["output"] = out
+        ret["ic_weights"] = self.ic_discriminator(x[..., 0, [0,1,3]])
+        ret["f_weights"] = self.f_discriminator(x)[...,dof:-dof, 0]
+        if self.formulation == 'competitive': 
+            ret["data_weights"] = self.data_discriminator(x)
+        return ret
     
     

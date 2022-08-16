@@ -7,7 +7,7 @@ import wandb
 from tqdm import tqdm
 import os
 
-from model.Competitive import CPINO, CPINN
+from model.Competitive import CPINO, CPINN, CPINO_SPLIT
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
 from model.PINO import PINO
@@ -99,6 +99,8 @@ if __name__ == '__main__':
     match config['info']['model']: 
         case "CPINO":
             model = CPINO(config)
+        case "CPINO-split":
+            model = CPINO_SPLIT(config)
         case "CPINN": 
             model = CPINN(config)
         case "SAPINO":
@@ -146,19 +148,12 @@ if __name__ == '__main__':
     for ep in pbar: 
         total_loss = {}
         for idx, (x, y) in enumerate(train_loader): 
-            x, y = x.to(device), y.to(device) 
-            # print(f"after load: {1e-9*torch.cuda.memory_allocated()}")
+            x, y = x.to(device), y.to(device)
             output = model.predict(x) 
-            # print(f"after predict: {1e-9*torch.cuda.memory_allocated()}")
             cur_loss = loss(x, y, output)
-            # print(f"after loss: {1e-9*torch.cuda.memory_allocated()}")
             model.step(cur_loss)
-            # print(f"after step: {1e-9*torch.cuda.memory_allocated()}")
             total_loss = update_loss_dict(total_loss, cur_loss)
-            # print(f"after update: {1e-9*torch.cuda.memory_allocated()}")
-            # if idx == 3: 
-            #     exit(1)
-        # print(f"after epoch: {1e-9*torch.cuda.memory_allocated()}")
+            print(idx)
         model.schedule_step()
         total_loss = loss_metrics(total_loss)
         if args.log: 
@@ -170,6 +165,7 @@ if __name__ == '__main__':
         
         if 'valid_data' in config.keys():
             valid_loss = eval_loss(problem.valid_loader, model, loss)
+            model.train()
             if args.log:
                 logger(valid_loss, prefix='valid')
 
@@ -190,7 +186,7 @@ if __name__ == '__main__':
     test_loss = eval_loss(problem.test_loader, model, loss)
 
     if args.log: 
-        logger(total_loss, run, prefix='test')
+        logger(test_loss, run, prefix='test')
     
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
     model.save(save_path)

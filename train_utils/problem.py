@@ -18,7 +18,7 @@ class problem:
         self.size_average = size_average
         self.reduction = reduction
 
-    def loss(self,input, target, prediction, bets=None): 
+    def loss(self, input, target, prediction, bets=None): 
         data_err =  torch.norm(prediction - target)
         loss = {
             "L2 data error": data_err, 
@@ -194,13 +194,12 @@ class NS3D(problem):
         self.train_loader = train_loader.make_loader(train_num_samples,
                                 batch_size=config['train_params']['batchsize'],
                                 start=0,
-                                train=train_config['shuffle'])
+                                train=True)
         test_config = config['test_data']
         test_loader = NSDataset(datapath1=test_config['path'],
                           nx=test_config['nx'], nt=test_config['nt'],
                           sub=test_config['sub_x'], sub_t=test_config['sub_t'],
                           t_interval=test_config['time_interval'])
-
         self.test_loader = test_loader.make_loader(test_loader.data.size()[0],
                                 batch_size=1,
                                 start=0,
@@ -289,7 +288,6 @@ class NSDataset(object):
         self.time_scale = t_interval
         data1 = np.load(datapath1)
         data1 = torch.tensor(data1, dtype=torch.float)[..., ::sub_t, ::sub, ::sub]
-        
         if datapath2 is not None:
             data2 = np.load(datapath2)
             data2 = torch.tensor(data2, dtype=torch.float)[..., ::sub_t, ::sub, ::sub]
@@ -371,7 +369,7 @@ class Loss():
         self.f_weight = config['train_params']['f_loss']
         self.data_weight = config['train_params']['xy_loss']
         self.formulation = config['info']['formulation']
-
+        self.loss = config['train_params']['loss']
         self.forcing = forcing
         self.v = v
         self.t_interval = t_interval
@@ -417,7 +415,7 @@ class Loss():
             f_loss_w = self.cLoss(f_truth, f_pred, f_weights)
         return ic_loss_w, f_loss_w
 
-    def cLoss(self, x, y, weights=None):
+    def cLoss(self, x, y, weights):
         num_examples = x.size()[0]
         errs_w = torch.mean(weights.reshape(num_examples, -1) * (x.reshape(num_examples, -1)-y.reshape(num_examples, -1)))
         return errs_w
@@ -433,20 +431,25 @@ class Loss():
         loss["L2 ic loss"] = ic_loss.item()
         loss["L2 f loss"] = f_loss.item()
         loss["L2 loss"] = self.ic_weight * ic_loss.item() + self.f_weight * f_loss.item() + self.data_weight * data_loss.item()
-        if self.model in ["CPINN", "CPINO", "SAPINN", "SAPINO"]: 
+        if self.model in ["CPINN", "CPINO", "SAPINN", "SAPINO", "CPINO-split"]: 
             ic_weights = prediction["ic_weights"]
             f_weights = prediction["f_weights"]
             if self.formulation == 'competitive': 
                 data_weights = prediction['data_weights']
                 data_loss = self.cLoss(output, target, weights=data_weights)
                 loss["weighted data loss"] = data_loss.item()
-
             ic_loss_w, f_loss_w, = self.w_physics_loss(
                 output, input, ic_weights, f_weights
                 )
-            loss["loss"] = self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * data_loss
+            if self.loss == 'rel': 
+                loss["loss"] = self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * rel_data_loss
+            else: 
+                loss["loss"] = self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * data_loss
             loss["weighted f err"] =  f_loss_w.item()
             loss["weighted ic err"] = ic_loss_w.item()
         else:
-            loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss
+            if self.loss == 'rel': 
+                loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * rel_data_loss
+            else: 
+                loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss
         return loss
