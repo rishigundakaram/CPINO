@@ -46,6 +46,13 @@ class PINO(Model):
     def schedule_step(self): 
         self.scheduler.step()
 
+class FNO(PINO): 
+    def __init__(self, params) -> None:
+        params['train_params']['f_loss'] = 0
+        params['train_params']['ic_loss'] = 0
+        super().__init__(params)
+
+
         
 
 class FNN2d(nn.Module):

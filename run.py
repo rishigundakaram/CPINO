@@ -120,6 +120,7 @@ if __name__ == '__main__':
                          config=config,
                          tags=config['info']['tags'], reinit=True,
                          settings=wandb.Settings(start_method="fork"))
+        config['info']['save_name'] = run.name + '.pt'
 
 
     model.train()
@@ -153,7 +154,6 @@ if __name__ == '__main__':
             cur_loss = loss(x, y, output)
             model.step(cur_loss)
             total_loss = update_loss_dict(total_loss, cur_loss)
-            print(idx)
         model.schedule_step()
         total_loss = loss_metrics(total_loss)
         if args.log: 
@@ -178,7 +178,8 @@ if __name__ == '__main__':
                     delta)
                 if flag: 
                     break
-
+    
+    model.eval()
     if config['info']['name'] == 'NS': 
         loss = Loss(config, problem.physics_truth, forcing=problem.test_forcing, 
             v=problem.v, t_interval=problem.test_t_interval)

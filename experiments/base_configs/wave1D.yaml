@@ -75,6 +75,7 @@ train_params:
   acgd_beta: .99
   scheduler_gamma: 0.5
   xy_loss: 0
+  loss: rel
 early_stopping: 
   minutes: 5
   patience: 2
