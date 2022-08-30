@@ -189,9 +189,9 @@ def linspace(a, b, num):
 # walltime="43:00:00"
 # experiment_name='CPINO_NS3D_Re500'
 
-experiment_file='Single_IC_1D_Wave.yaml'
-walltime="00:10:00"
-experiment_name='CPINO_test_single_ic'
+experiment_file='Ablations_NS3D_Re500_p2.yaml'
+walltime="43:00:00"
+experiment_name='Ablations_NS3D_Re100_p2'
 
 base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
 experiment_dir='experiments/'

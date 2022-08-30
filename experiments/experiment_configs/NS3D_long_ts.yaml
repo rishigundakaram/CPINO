@@ -1,0 +1,36 @@
+- info: 
+    model: ['CPINO']
+    formulation: ['lagrangian']
+    walltime: [480]
+  train_data: 
+    time_interval: [1]
+  test_data: 
+    time_interval: [1]
+  train_params: 
+    epochs: [200]
+    xy_loss: [10, 5]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1]
+    lr_max: [.1, .01] 
+    lr_min: [.001, .0001]
+    acgd_beta: [0.999, .99]
+    cgd_tolerance: [1.0e-4]
+  early_stopping: 
+    use: [False]
+- info: 
+    model: ['PINO']
+    walltime: [480]
+  train_params: 
+    epochs: [1000]
+    base_lr: [.001, .0001, .00001]
+    xy_loss: [0]
+    f_loss: [1]
+    ic_loss: [5, 1]
+    xy_loss: [10, 5, 1]
+  train_data: 
+    time_interval: [1]
+  test_data: 
+    time_interval: [1]
+  early_stopping: 
+    use: [False]

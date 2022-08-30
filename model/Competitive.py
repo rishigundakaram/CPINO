@@ -296,9 +296,9 @@ class CPINO_SIMGD(Model):
             ).to(device)
 
         self.min_optimizer = Adam(self.model.parameters(), betas=(0.9, 0.999),
-                     lr=params['train_params']['min_lr'])
-        self.max_optimizer = Adam(self.Discriminator.parameters(), betas=(0.9, 0.999),
-                     lr=params['train_params']['max_lr'])
+                     lr=params['train_params']['lr_min'])
+        self.max_optimizer = NAdam(self.Discriminator.parameters(), betas=(0.9, 0.999),
+                     lr=params['train_params']['lr_max'])
             
     def __call__(self, x):
         return self.model(x)
@@ -390,9 +390,9 @@ class CPINO_ALTGD(Model):
             ).to(device)
 
         self.min_optimizer = Adam(self.model.parameters(), betas=(0.9, 0.999),
-                     lr=params['train_params']['min_lr'])
-        self.max_optimizer = Adam(self.Discriminator.parameters(), betas=(0.9, 0.999),
-                     lr=params['train_params']['max_lr'])
+                     lr=params['train_params']['lr_min'])
+        self.max_optimizer = NAdam(self.Discriminator.parameters(), betas=(0.9, 0.999),
+                     lr=params['train_params']['lr_max'])
         self.opt_state = 1
             
     def __call__(self, x):
@@ -404,6 +404,7 @@ class CPINO_ALTGD(Model):
             self.min_optimizer.step() 
         else: 
             self.max_optimizer.step()
+        self.opt_state = not self.opt_state
         self.min_optimizer.zero_grad()
         self.max_optimizer.zero_grad()
 

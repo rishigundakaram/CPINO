@@ -7,10 +7,10 @@ import wandb
 from tqdm import tqdm
 import os
 
-from model.Competitive import CPINO, CPINN, CPINO_SPLIT
+from model.Competitive import CPINO, CPINN, CPINO_SPLIT, CPINO_SIMGD, CPINO_ALTGD
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
-from model.PINO import PINO
+from model.PINO import PINO, FNO
 
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -107,6 +107,10 @@ if __name__ == '__main__':
             model = CPINO(config)
         case "CPINO-split":
             model = CPINO_SPLIT(config)
+        case "CPINO-simgd":
+            model = CPINO_SIMGD(config)
+        case "CPINO-altgd":
+            model = CPINO_ALTGD(config)
         case "CPINN": 
             model = CPINN(config)
         case "SAPINO":
@@ -115,6 +119,8 @@ if __name__ == '__main__':
             model = SAPINN(config)
         case "PINO":
             model = PINO(config)
+        case "FNO":
+            model = FNO(config)
         case "PINN":
             model = PINN(config)
         

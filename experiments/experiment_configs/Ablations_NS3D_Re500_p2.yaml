@@ -1,0 +1,13 @@
+- info: 
+    model: ['CPINO-altgd', 'CPINO-simgd']
+    walltime: [2400]
+  train_params: 
+    epochs: [100000]
+    xy_loss: [10, 5]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1]
+    lr_max: [.01, .001] 
+    lr_min: [.001]
+  early_stopping: 
+    use: [False]
