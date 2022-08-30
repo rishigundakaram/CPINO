@@ -1,0 +1,15 @@
+- info: 
+    model: ['CPINO']
+    formulation: ['lagrangian']
+    walltime: [2400]
+  train_params: 
+    epochs: [10000]
+    xy_loss: [10]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1]
+    lr_max: [.01] 
+    lr_min: [.001]
+    acgd_beta: [.999]
+  early_stopping: 
+    use: [False]

@@ -1,0 +1,15 @@
+- info: 
+    model: ['CPINO-split']
+    formulation: ['lagrangian']
+    walltime: [480]
+  train_params: 
+    epochs: [10000]
+    xy_loss: [5]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1]
+    lr_max: [1, .1, .01, .001] 
+    lr_min: [.001, .01, .0001]
+    acgd_beta: [.999, .99, .9]
+  early_stopping: 
+    use: [False]

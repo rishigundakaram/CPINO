@@ -2,5 +2,6 @@
 wandb
 __pycache__
 data
-experiments/*
+experiments/runs
+experiments/wandb
 sweeps

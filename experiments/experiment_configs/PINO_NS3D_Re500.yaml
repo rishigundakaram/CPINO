@@ -1,0 +1,9 @@
+- info: 
+    model: ['PINO']
+    walltime: [600]
+  train_params: 
+    epochs: [10000]
+    base_lr: [0.001, .0001, .00001]
+    f_loss: [1]
+    ic_loss: [5]
+    xy_loss: [10]

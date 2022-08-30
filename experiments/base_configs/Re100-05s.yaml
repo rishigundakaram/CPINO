@@ -1,0 +1,77 @@
+info:
+  formulation: competitive
+  entity: rishigundakaram
+  group: test
+  name: NS
+  model: CPINO
+  project: CPINO-NS3D
+  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/
+  save_name: NS-1s-cpino-0.pt
+  tags: [None]
+  walltime: 480
+model_1:
+  activation: gelu
+  fc_dim: 128
+  layers: [64, 64, 64, 64, 64]
+  modes1: [8, 8, 8, 8]
+  modes2: [8, 8, 8, 8]
+  modes3: [8, 8, 8, 8]
+model_2:
+  activation: gelu
+  fc_dim: 64
+  layers: [32]
+  modes1: [4]
+  modes2: [4]
+  modes3: [4]
+model_3:
+  activation: gelu
+  fc_dim: 64
+  layers: [32]
+  modes1: [4]
+  modes2: [4]
+  modes3: [4]
+model_4:
+  activation: gelu
+  fc_dim: 64
+  layers: [32]
+  modes1: [4]
+  modes2: [4]
+  modes3: [4]
+test_data:
+  path: /groups/tensorlab/rgundaka/code/data/NS_data/NS_fine_Re100_T128_part2.npy
+  sub_t: 1
+  sub_x: 1
+  nx: 128
+  nt: 128
+  Re: 100
+  time_interval: 1
+train_data:
+  path1: /groups/tensorlab/rgundaka/code/data/NS_data/NS_fine_Re100_T128_part0.npy
+  path2: /groups/tensorlab/rgundaka/code/data/NS_data/NS_fine_Re100_T128_part1.npy
+  sub_t: 4
+  sub_x: 4
+  nx: 128
+  nt: 128
+  Re: 100
+  shuffle: False
+  time_interval: 1
+valid_data: 
+  sample_proportion: .1
+train_params:
+  base_lr: 0.001
+  batchsize: 1
+  cg_tolerance: 0.0001
+  epochs: 500
+  f_loss: 1.0
+  ic_loss: 5
+  lr_max: 0.025
+  lr_min: 0.005
+  scheduler_gamma: 0.5
+  milestones: [150, 300, 450]
+  xy_loss: 10
+  loss: rel
+early_stopping: 
+  min_epochs: 20
+  patience: 10
+  delta: 0.001
+  use: False
