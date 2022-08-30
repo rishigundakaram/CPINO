@@ -64,17 +64,6 @@ def eval_loss(loader, model, loss):
     total_loss = loss_metrics(total_loss) 
     return total_loss
 
-def check_early_stopping(prev_metric, cur_metric, cur_epoch, min_epochs, cur_patience, patience, delta): 
-    flag = 0
-    if prev_metric is None: 
-        pass
-    elif cur_epoch > min_epochs and (cur_metric > prev_metric or prev_metric - cur_metric > delta): 
-        cur_patience -= 1
-        if cur_patience == 0: 
-            flag = 1
-    else: 
-        cur_patience = patience
-    return flag, cur_metric, cur_patience 
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Basic paser')
@@ -114,14 +103,17 @@ if __name__ == '__main__':
         
 
     if args.log: 
-        run = wandb.init(project=config['info']['project'],
-                         entity=config['info']['entity'],
-                         group=config['info']['group'],
-                         config=config,
-                         tags=config['info']['tags'], reinit=True,
-                         settings=wandb.Settings(start_method="fork"))
+        name = config['info']['save_name']
+        name = name.split('.')
+        id = name[0].split('-')[-1]
+        api = wandb.Api()
+        entity = config['info']['entity']
+        project = config['info']['project']
+        run = api.run(f'{entity}/{project}/{id}')
 
+    save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
 
+    model.load(save_path)
     model.eval()
     epochs = config['train_params']['epochs']
     test_loader = problem.test_loader
@@ -130,14 +122,14 @@ if __name__ == '__main__':
         loss = Loss(config, problem.physics_truth, forcing=problem.test_forcing, 
             v=problem.v, t_interval=problem.test_t_interval)
     else: 
-         loss = Loss(config, problem.physics_truth)
-    pbar = tqdm(range(epochs), dynamic_ncols=True, smoothing=0.1)
-    
+         loss = Loss(config, problem.physics_truth)    
 
     test_loss = eval_loss(problem.test_loader, model, loss)
 
+    
     if args.log: 
         logger(test_loss, run, prefix='test')
 
+    run.update()
 
 

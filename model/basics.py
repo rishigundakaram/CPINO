@@ -229,9 +229,11 @@ class Model:
         return ret
     
     def save(self,path): 
-        torch.save(self.model.state_dict(), path)
+        name = path + '.pt'
+        torch.save(self.model.state_dict(), name)
     
     def load(self, path): 
-        self.model.load_state_dict(torch.load(path))
+        name = path + '.pt'
+        self.model.load_state_dict(torch.load(name))
 
     

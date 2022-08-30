@@ -1,4 +1,4 @@
-#!/home/rishi/projects/anandkumar/CPINO/env/bin/python3
+#!/home/rishi/projects/anandkumar/CPINO/env/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys

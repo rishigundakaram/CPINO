@@ -1,0 +1,116 @@
+early_stopping:
+  delta: 0.001
+  min_epochs: 10
+  patience: 5
+  use: false
+info:
+  entity: rishigundakaram
+  formulation: competitive
+  group: test
+  model: PINO
+  name: NS
+  project: NS3D
+  save_dir: /home/rishi/projects/anandkumar/CPINO/experiments/runs/test
+  save_name: logical-dream-18-695d3i5g
+  tags:
+  - None
+  walltime: 1
+model_1:
+  activation: gelu
+  fc_dim: 128
+  layers:
+  - 64
+  - 64
+  - 64
+  - 64
+  - 64
+  modes1:
+  - 8
+  - 8
+  - 8
+  - 8
+  modes2:
+  - 8
+  - 8
+  - 8
+  - 8
+  modes3:
+  - 8
+  - 8
+  - 8
+  - 8
+model_2:
+  activation: gelu
+  competitive_output:
+  - f
+  - ic
+  - data
+  fc_dim: 64
+  layers:
+  - 32
+  modes1:
+  - 4
+  modes2:
+  - 4
+  modes3:
+  - 4
+model_3:
+  activation: gelu
+  fc_dim: 64
+  layers:
+  - 32
+  modes1:
+  - 4
+  modes2:
+  - 4
+  modes3:
+  - 4
+model_4:
+  activation: gelu
+  fc_dim: 64
+  layers:
+  - 32
+  modes1:
+  - 4
+  modes2:
+  - 4
+  modes3:
+  - 4
+test_data:
+  Re: 500
+  nt: 128
+  nx: 128
+  offset: 0
+  path: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
+  sub_t: 1
+  sub_x: 1
+  time_interval: 1
+train_data:
+  Re: 500
+  nt: 128
+  nx: 128
+  offset: 0
+  path1: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
+  path2: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
+  shuffle: false
+  sub_t: 2
+  sub_x: 2
+  time_interval: 1
+train_params:
+  base_lr: 0.001
+  batchsize: 1
+  cg_tolerance: 0.0001
+  epochs: 10000
+  f_loss: 1.0
+  ic_loss: 5
+  loss: rel
+  lr_max: 0.01
+  lr_min: 0.001
+  milestones:
+  - 150
+  - 300
+  - 450
+  scheduler_gamma: 0.5
+  xy_loss: 10
+valid_data:
+  sample_proportion: 0.2

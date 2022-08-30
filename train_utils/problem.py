@@ -183,13 +183,14 @@ class NS3D(problem):
         train_num_samples = train_loader.data.size()[0]
         if 'valid_data' in config.keys(): 
             sample_proportion = config['valid_data']['sample_proportion']
-            offset = floor(sample_proportion*train_num_samples)
-            train_num_samples -= offset
+            if sample_proportion: 
+                offset = floor(sample_proportion*train_num_samples)
+                train_num_samples -= offset
 
-            self.valid_loader = train_loader.make_loader(offset,
-                                batch_size=config['train_params']['batchsize'],
-                                start=train_num_samples,
-                                train=train_config['shuffle'])
+                self.valid_loader = train_loader.make_loader(offset,
+                                    batch_size=config['train_params']['batchsize'],
+                                    start=train_num_samples,
+                                    train=train_config['shuffle'])
 
         self.train_loader = train_loader.make_loader(train_num_samples,
                                 batch_size=config['train_params']['batchsize'],

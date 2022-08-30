@@ -5,3 +5,4 @@ data
 experiments/runs
 experiments/wandb
 sweeps
+env

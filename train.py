@@ -7,10 +7,10 @@ import wandb
 from tqdm import tqdm
 import os
 
-from model.Competitive import CPINO, CPINN, CPINO_SPLIT, CPINO_SIMGD, CPINO_ALTGD
+from model.Competitive import CPINO, CPINN, CPINO_SPLIT
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
-from model.PINO import PINO, FNO
+from model.PINO import PINO
 
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -107,10 +107,6 @@ if __name__ == '__main__':
             model = CPINO(config)
         case "CPINO-split":
             model = CPINO_SPLIT(config)
-        case "CPINO-simgd":
-            model = CPINO_SIMGD(config)
-        case "CPINO-altgd":
-            model = CPINO_ALTGD(config)
         case "CPINN": 
             model = CPINN(config)
         case "SAPINO":
@@ -119,8 +115,6 @@ if __name__ == '__main__':
             model = SAPINN(config)
         case "PINO":
             model = PINO(config)
-        case "FNO":
-            model = FNO(config)
         case "PINN":
             model = PINN(config)
         
@@ -132,17 +126,19 @@ if __name__ == '__main__':
                          config=config,
                          tags=config['info']['tags'], reinit=True,
                          settings=wandb.Settings(start_method="fork"))
-        config['info']['save_name'] = run.name + '.pt'
-        yaml.dump(config, config_file)
+        config['info']['save_name'] = run.name + '-' + run.id
+        with open(config_file, 'w') as cf:
+            yaml.dump(config, cf)
 
     
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
+    # saves model when script finishes
     atexit.register(end, save_path=save_path, model=model)
     
     model.train()
     epochs = config['train_params']['epochs']
     train_loader = problem.train_loader
-    if 'valid_data' in config.keys(): 
+    if config['valid_data']['sample_proportion']: 
         valid_loader = problem.valid_loader
         valid_error = None
     if 'early_stopping' in config.keys() and config['early_stopping']['use']:   
@@ -178,7 +174,7 @@ if __name__ == '__main__':
         if runtime_min is not None and elapsed > runtime_min * 60: 
             break
         
-        if 'valid_data' in config.keys():
+        if config['valid_data']['sample_proportion']:
             model.eval()
             valid_loss = eval_loss(problem.valid_loader, model, loss)
             model.train()

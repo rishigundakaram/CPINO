@@ -6,194 +6,16 @@ from pprint import pprint
 
 def linspace(a, b, num): 
     return [a + (a-b)/num * i for i in range(num+1)]
-    
-# param_grid = {
-#     'info' : {
-#         'competitive': [False]
-#     },
-#     'train_params': {
-#         'epochs': [300],
-#         'xy_loss': [0],
-#         'f_loss': [0],
-#         'ic_loss': [1],
-#     },
-# }
-# walltime="0:20:00"
-# experiment_name='wave1D_PINO_ic'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [False]
-#     },
-#     'train_params': {
-#         'lr_min': [.05, .025, .01, .005, .001], 
-#         'lr_max': [.05, .025, .01, .005, .001],
-#         'epochs': [100],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5],
-#         'cg_tolerance': [10e-6]
-#     },
-#     'train_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     },
-#     'test_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     }
-# }
-# walltime="0:30:00"
-# experiment_name='wave1D_CPINO_ic'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [True]
-#     },
-#     'train_params': {
-#         'lr_min': [.05], 
-#         'lr_max': [.05],
-#         'epochs': [500],
-#         'xy_loss': [0],
-#         'f_loss': [0],
-#         'ic_loss': [1],
-#         'cg_tolerance': [10e-3, 10e-4, 10e-5, 10e-6, 10e-7, 10e-8, 10e-9, 10e-10]
-#     },
-#     'train_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     },
-#     'test_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     }
-# }
-# walltime="0:10:00"
-# experiment_name='wave1D_CPINO_cgtol_sic_sgd'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [True]
-#     }
-# }
-# walltime="1:00:00"
-# experiment_name='wave1D_CPINO'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [True]
-#     },
-#     'train_params': {
-#         'lr_min': [.05, .025, .01, .005, .001], 
-#         'lr_max': [.05, .025, .01, .005, .001],
-#         'epochs': [500],
-#         'xy_loss': [0],
-#         'f_loss': [0],
-#         'ic_loss': [1]
-#     },
-#     'train_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     },
-#     'test_data': {
-#         'path': ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train-1s.pt']
-#     }
-# }
-# walltime="0:10:00"
-# experiment_name='wave1D_CPINO_lr_sic_sgd'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [False]
-#     },
-#     'train_params': {
-#         'epochs': [100],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5]
-#     }
-# }
-# walltime="2:00:00"
-# experiment_name='NS3D_PINO_test'
-
-# param_grid = {
-#     'info' : {
-#         'competitive': [True]
-#     },
-#     'train_params': {
-#         'epochs': [100],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5]
-#     }
-# }
-# walltime="2:00:00"
-# experiment_name='NS3D_CPINO_test'
-
-# param_grid = {
-#     'info' : {
-#         'model': ['CPINN']
-#     },
-#     'train_params': {
-#         'epochs': [10000],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5],
-#         'batchsize': [1],
-#     }
-# }
-# walltime="0:10:00"
-# experiment_name='CPINN_test'
-
-# param_grid = {
-#     'info' : {
-#         'model': ['SAPINN']
-#     },
-#     'train_params': {
-#         'epochs': [1000],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5],
-#         'batchsize': [1]
-#     }
-# }
-# walltime="0:10:00"
-# experiment_name='SAPINN_test'
-
-
-
-# param_grid = {
-#     'info' : {
-#         'model': ['PINO']
-#     },
-#     'train_params': {
-#         'epochs': [1000],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5]
-#     }
-# }
-# walltime="0:10:00"
-# experiment_name='PINO_test'
-
-# param_grid = {
-#     'info' : {
-#         'model': ['CPINO', 'CPINN', 'PINN', 'PINO', 'SAPINN', 'SAPINO']
-#     },
-#     'train_params': {
-#         'epochs': [10000],
-#         'xy_loss': [0],
-#         'f_loss': [1],
-#         'ic_loss': [5],
-#         'batchsize': [1]
-#     }
-# }
-
 
 # experiment_file='CPINO_NS3D_Re500.yaml'
 # walltime="43:00:00"
 # experiment_name='CPINO_NS3D_Re500'
 
-experiment_file='Ablations_NS3D_Re500_p2.yaml'
+experiment_file='varying_data_Re500.yaml'
 walltime="43:00:00"
-experiment_name='Ablations_NS3D_Re100_p2'
+experiment_name='varying_data_Re500'
 
-base_dir='/groups/tensorlab/rgundaka/code/CPINO/'
+base_dir='/home/rishi/projects/anandkumar/CPINO/'
 experiment_dir='experiments/'
 run_dir = 'runs'
 config_file = os.path.join(base_dir, experiment_dir, 'experiment_configs/',experiment_file)
@@ -204,8 +26,8 @@ with open(config_file, 'r') as stream:
 
 if sys.argv[1] == 'wave1D':
     base_config = os.path.join(base_dir, experiment_dir, 'base_configs/wave1D.yaml')
-elif sys.argv[1] == 'NS3D-500': 
-    base_config = os.path.join(base_dir, experiment_dir, 'base_configs/Re500-1s.yaml')
+elif sys.argv[1] == 'NS3D': 
+    base_config = os.path.join(base_dir, experiment_dir, 'base_configs/NS3D.yaml')
 elif sys.argv[1] == 'NS3D-100': 
     base_config = os.path.join(base_dir, experiment_dir, 'base_configs/Re100-05s.yaml')
 else: 
@@ -257,6 +79,8 @@ f"""#!/bin/bash
             file.write('\n')
             train_str =  f'python {os.path.join(base_dir, "run.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
             file.write(f"{train_str}\n")
+            eval_str =  f'python {os.path.join(base_dir, "eval.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
+            file.write(f"{eval_str}\n")
     sh_path = os.path.join(path, 'run.sh')
     with open(sh_path, 'w+') as run: 
         for idx in range(n_tasks): 
@@ -282,7 +106,7 @@ with open(base_config, 'r') as stream:
 config['info']['save_dir'] = os.path.join(base_dir, experiment_dir, run_dir, experiment_name, 'checkpoints')
 for idx, param in enumerate(params): 
     cur_config = update_config(config, param)
-    cur_config['info']['project'] = f"CPINO-{pde}"
+    cur_config['info']['project'] = f"{pde}"
     cur_config['info']['group'] = experiment_name
     cur_config['info']['save_name'] = f'{pde}-cpino-{idx}.pt'
     cur_path = os.path.join(base_dir, experiment_dir, run_dir, experiment_name)
