@@ -163,5 +163,3 @@ if __name__ == '__main__':
     model.save(save_path)
         
 
-
-
