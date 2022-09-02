@@ -180,7 +180,7 @@ class NS3D(problem):
                           sub=train_config['sub_x'], sub_t=train_config['sub_t'],
                           t_interval=train_config['time_interval'])
         
-        train_num_samples = train_loader.data.size()[0]
+        train_num_samples = config['train_data']['ns']
         if 'valid_data' in config.keys(): 
             sample_proportion = config['valid_data']['sample_proportion']
             if sample_proportion: 
@@ -306,6 +306,7 @@ class NSDataset(object):
 
     def make_loader(self, n_sample, batch_size, start=0, train=True):
         if train:
+            print(self.data[start:start + n_sample, :, :, 0].size())
             a_data = self.data[start:start + n_sample, :, :, 0].reshape(n_sample, self.S, self.S)
             u_data = self.data[start:start + n_sample].reshape(n_sample, self.S, self.S, self.T)
         else:

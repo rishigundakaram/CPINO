@@ -67,7 +67,8 @@ class CPINO(Model):
                         min_params=self.model.parameters(), 
                         lr_min=train_params['lr_min'], 
                         lr_max=train_params['lr_max'], 
-                        tol=train_params["cg_tolerance"])
+                        tol=train_params["cg_tolerance"], 
+                        beta=train_params['acgd_beta'])
             
     def __call__(self, x):
         return self.model(x)
@@ -103,8 +104,13 @@ class CPINO(Model):
     
     def save(self, path):
         super().save(path)
-        path = path[:-3] + '-opt' + path[-3:]
+        path = path + '-opt' + '.pt'
         torch.save(self.optimizer.state_dict(), path)
+    
+    def load(self, path):
+        super().load(path)
+        path = path + '-opt' + '.pt'
+        self.optimizer.load_state_dict(torch.load(path))
 
 class CPINN(Model): 
     def __init__(self, params) -> None:
@@ -435,6 +441,11 @@ class CPINO_ALTGD(Model):
     
     def save(self, path):
         super().save(path)
-        path = path[:-3] + '-opt' + path[-3:]
+        path = path + '-opt' + '.pt'
+        torch.save(self.optimizer.state_dict(), path)
+    
+    def load(self, path):
+        super().save(path)
+        path = path + '-opt' + '.pt'
         torch.save(self.optimizer.state_dict(), path)
     
