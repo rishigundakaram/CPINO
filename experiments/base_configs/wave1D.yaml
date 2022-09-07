@@ -1,12 +1,7 @@
 early_stopping:
   delta: 0.001
-<<<<<<< HEAD
   minutes: 5
   patience: 2
-=======
-  min_epochs: 10
-  patience: 5
->>>>>>> 53f87a5d9ed6bbff4c59ca251ce75e6d236439ad
   use: false
 info:
   entity: rishigundakaram
@@ -14,24 +9,16 @@ info:
   group: multi_ic_wave1D_param_search
   model: CPINO
   name: wave1D
-  project: CPINO-wave1D
-<<<<<<< HEAD
+  project: wave1D
   save_dir: /home/rishi/projects/anandkumar/CPINO/experiments/runs/wave1D
-  save_name: smart-moon-3271-2b2s1hfy
+  save_name: wise-glitter-127-s1tlunwt
   tags:
-=======
-  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
-  save_name: wave1D-cpino-0.pt
-  walltime: 30
-  formulation: competititive
-  tags: 
->>>>>>> 53f87a5d9ed6bbff4c59ca251ce75e6d236439ad
   - None
-  walltime: 30
+  walltime: 0
 lr_scheduling:
   decay:
-    decay_rate: 0.75
-    interval: 4
+    decay_rate: 0.1
+    interval: 50
   multi_step_lr:
     milestones:
     - 25
@@ -87,37 +74,23 @@ train_data:
   path: /home/rishi/projects/anandkumar/data/wave1D/wave1D-test.pt
   sub_t: 1
   sub_x: 32
-  nx: 4096
-  nt: 100
-valid_data:
-  offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-valid.pt
-  sub_t: 1
-  sub_x: 32
-  nx: 4096
-  nt: 100
-  sample_proportion: 1
 train_params:
   acgd_beta: 0.99
   base_lr: 0.001
   batchsize: 1
   cg_tolerance: 0.0001
-  epochs: 1
+  epochs: 150
   f_loss: 1.0
   ic_loss: 5
   loss: rel
-early_stopping: 
-  minutes: 5
-  patience: 2
-  delta: .001
-  use: false
-  lr_max: 0.5
-  lr_min: 0.001
+  lr_max: 1
+  lr_min: 0.0001
   xy_loss: 0
-lr_scheduling:
-  decay: 
-    decay_rate: 0.75
-    interval: 10
-  mult_lr_step: 
-    milestones: [150, 300, 450]
-    scheduler_gamma: 0.5
+valid_data:
+  nt: 100
+  nx: 4096
+  offset: None
+  path: /home/rishi/projects/anandkumar/data/wave1D/wave1D-valid.pt
+  sample_proportion: 1
+  sub_t: 1
+  sub_x: 32
