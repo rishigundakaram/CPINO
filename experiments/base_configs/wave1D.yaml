@@ -1,3 +1,8 @@
+early_stopping:
+  delta: 0.001
+  min_epochs: 10
+  patience: 5
+  use: false
 info:
   model: CPINO
   entity: rishigundakaram
@@ -7,7 +12,7 @@ info:
   save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
   save_name: wave1D-cpino-0.pt
   walltime: 30
-  formulation: competitive
+  formulation: competititive
   tags: 
   - None
 model_1:
@@ -63,6 +68,7 @@ valid_data:
   sub_x: 32
   nx: 4096
   nt: 100
+  sample_proportion: 1
 train_params:
   base_lr: 0.001
   batchsize: 1
@@ -76,6 +82,7 @@ train_params:
   scheduler_gamma: 0.5
   xy_loss: 0
   loss: rel
+  milestones: [150, 300, 450]
 early_stopping: 
   minutes: 5
   patience: 2
