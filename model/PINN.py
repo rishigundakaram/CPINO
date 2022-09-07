@@ -73,15 +73,9 @@ class PINN(Model):
             
         self.optimizer = Adam(self.model.parameters(), betas=(0.9, 0.999),
                      lr=params['train_params']['base_lr'])
-        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer,
-                                                     milestones=params['train_params']['milestones'],
-                                                     gamma=params['train_params']['scheduler_gamma'])
 
     def step(self, loss):
         loss["loss"].backward()
         self.optimizer.step() 
         self.optimizer.zero_grad()
-    
-    def schedule_step(self): 
-        self.scheduler.step()
 

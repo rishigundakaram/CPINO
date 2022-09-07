@@ -2,7 +2,6 @@ from time import time
 import yaml
 import torch
 from argparse import ArgumentParser
-from train_utils.problem import wave1D, NS3D, Loss
 import wandb
 from tqdm import tqdm
 import os
@@ -11,6 +10,9 @@ from model.Competitive import CPINO, CPINN, CPINO_SPLIT
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
 from model.PINO import PINO
+
+from train_utils.problem import wave1D, NS3D, Loss
+from train_utils.schedulers import decay_schedule, no_schedule
 
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -117,6 +119,18 @@ if __name__ == '__main__':
             model = PINO(config)
         case "PINN":
             model = PINN(config)
+    
+    lr_sked = config['lr_scheduling']
+    if 'C' in config['info']['model']:
+        if 'decay' in lr_sked: 
+            scheduler = decay_schedule(model.optimizer, config)
+    elif 'None' in config['lr_scheduling']['type']: 
+        scheduler = no_schedule()
+    else: 
+        if 'multi_step_lr' in lr_sked: 
+            scheduler = torch.optim.lr_scheduler.MultiStepLR(model.optimizer,
+                                                     milestones=lr_sked['multi_step_lr']['milestones'],
+                                                     gamma=lr_sked['multi_step_lr']['scheduler_gamma'])
         
 
     if args.log: 
@@ -165,7 +179,7 @@ if __name__ == '__main__':
             cur_loss = loss(x, y, output)
             model.step(cur_loss)
             total_loss = update_loss_dict(total_loss, cur_loss)
-        model.schedule_step()
+        scheduler.step()
         total_loss = loss_metrics(total_loss)
         if args.log: 
             logger(total_loss, prefix='train')

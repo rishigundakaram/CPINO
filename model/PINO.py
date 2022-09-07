@@ -42,9 +42,7 @@ class PINO(Model):
         loss["loss"].backward()
         self.optimizer.step() 
         self.optimizer.zero_grad()
-    
-    def schedule_step(self): 
-        self.scheduler.step()
+
 
 class FNO(PINO): 
     def __init__(self, params) -> None:
