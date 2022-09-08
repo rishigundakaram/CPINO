@@ -81,7 +81,7 @@ test_data:
   nt: 128
   nx: 128
   offset: 0
-  path: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
+  path: /usr/src/app/data/NS/NS_fine_Re500_T128_part2.npy
   sub_t: 1
   sub_x: 1
   time_interval: 1
@@ -90,8 +90,8 @@ train_data:
   nt: 128
   nx: 128
   offset: 0
-  path1: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
-  path2: /home/rishi/projects/anandkumar/data/NS/NS_fine_Re500_T128_part2.npy
+  path1: /usr/src/app/data/NS/NS_fine_Re500_T128_part2.npy
+  path2: /usr/src/app/data/NS/NS_fine_Re500_T128_part2.npy
   shuffle: false
   sub_t: 2
   sub_x: 2

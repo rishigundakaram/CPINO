@@ -95,29 +95,26 @@ if __name__ == '__main__':
     print(f"using device: {device}")
 
     print('loading data')
-    match config['info']['name']: 
-        case "wave1D": 
-            problem = wave1D(config)
-        case "NS":
-            problem = NS3D(config)
+    if config['info']['name'] == "wave1D": 
+        problem = wave1D(config)
+    elif config['info']['name'] == "NS":
+        problem = NS3D(config)
     print('data is loaded')
 
-    match config['info']['model']: 
-        case "CPINO":
-            model = CPINO(config)
-        case "CPINO-split":
-            model = CPINO_SPLIT(config)
-        case "CPINN": 
-            model = CPINN(config)
-        case "SAPINO":
-            model = SAPINO(config)
-        case "SAPINN": 
-            model = SAPINN(config)
-        case "PINO":
-            model = PINO(config)
-        case "PINN":
-            model = PINN(config)
-        
+    if config['info']['model'] == "CPINO": 
+        model = CPINO(config)
+    elif config['info']['model'] == "CPINO-split": 
+        model = CPINO_SPLIT(config)
+    elif config['info']['model'] == "CPINN": 
+        model = CPINN(config)
+    elif config['info']['model'] == "SAPINO": 
+        model = SAPINO(config)
+    elif config['info']['model'] == "SAPINN": 
+        model = SAPINN(config)
+    elif config['info']['model'] == "PINO": 
+        model = PINO(config)
+    elif config['info']['model'] == "PINN": 
+        model = PINN(config)
 
     if args.log: 
         run = wandb.init(project=config['info']['project'],

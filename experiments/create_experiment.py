@@ -15,7 +15,7 @@ experiment_file='varying_data_Re500.yaml'
 walltime="43:00:00"
 experiment_name='varying_data_Re500'
 
-base_dir='/home/rishi/projects/anandkumar/CPINO/'
+base_dir='../'
 experiment_dir='experiments/'
 run_dir = 'runs'
 config_file = os.path.join(base_dir, experiment_dir, 'experiment_configs/',experiment_file)
