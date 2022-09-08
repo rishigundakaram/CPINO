@@ -2,7 +2,6 @@ from time import time
 import yaml
 import torch
 from argparse import ArgumentParser
-from train_utils.problem import wave1D, NS3D, Loss
 import wandb
 from tqdm import tqdm
 import os
@@ -11,6 +10,9 @@ from model.Competitive import CPINO, CPINN, CPINO_SPLIT
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
 from model.PINO import PINO
+
+from train_utils.problem import wave1D, NS3D, Loss
+from train_utils.schedulers import decay_schedule, no_schedule
 
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -162,13 +164,13 @@ if __name__ == '__main__':
             cur_loss = loss(x, y, output)
             model.step(cur_loss)
             total_loss = update_loss_dict(total_loss, cur_loss)
-        model.schedule_step()
+        scheduler.step()
         total_loss = loss_metrics(total_loss)
         if args.log: 
             logger(total_loss, prefix='train')
         pbar.set_description(dict_to_str(total_loss))
         elapsed = time() - start_time
-        if runtime_min is not None and elapsed > runtime_min * 60: 
+        if runtime_min != 0 and elapsed > runtime_min * 60: 
             break
         
         if config['valid_data']['sample_proportion']:

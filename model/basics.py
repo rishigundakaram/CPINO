@@ -213,9 +213,6 @@ class Model:
     
     def train(self):
         self.model.train()
-    
-    def schedule_step(self): 
-        pass
 
     def eval(self): 
         self.model.eval()

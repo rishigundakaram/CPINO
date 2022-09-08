@@ -102,14 +102,14 @@ if __name__ == '__main__':
             model = PINN(config)
         
 
-    if args.log: 
-        name = config['info']['save_name']
-        name = name.split('.')
-        id = name[0].split('-')[-1]
-        api = wandb.Api()
-        entity = config['info']['entity']
-        project = config['info']['project']
-        run = api.run(f'{entity}/{project}/{id}')
+    name = config['info']['save_name']
+    name = name.split('.')
+    id = name[0].split('-')[-1]
+    api = wandb.Api()
+    entity = config['info']['entity']
+    project = config['info']['project']
+    run = api.run(f'{entity}/{project}/{id}')
+        
 
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
 
@@ -125,11 +125,8 @@ if __name__ == '__main__':
          loss = Loss(config, problem.physics_truth)    
 
     test_loss = eval_loss(problem.test_loader, model, loss)
-
+    print(test_loss)
     
-    if args.log: 
-        logger(test_loss, run, prefix='test')
+    logger(test_loss, run, prefix='test')
 
     run.update()
-
-

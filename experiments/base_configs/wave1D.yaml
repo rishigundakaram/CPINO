@@ -1,15 +1,33 @@
+early_stopping:
+  delta: 0.001
+  minutes: 5
+  patience: 2
+  use: false
 info:
-  model: CPINO
   entity: rishigundakaram
-  group: multi_ic_wave1D_param_search
-  name: wave1D
-  project: CPINO-wave1D
-  save_dir: /groups/tensorlab/rgundaka/code/CPINO/experiments/wave1D_initial_test/checkpoints
-  save_name: wave1D-cpino-0.pt
-  walltime: 30
   formulation: competitive
-  tags: 
+  group: multi_ic_wave1D_param_search
+  model: CPINO
+  name: wave1D
+  project: wave1D
+  save_dir: /home/rishi/projects/anandkumar/CPINO/experiments/runs/wave1D
+  save_name: sleek-plasma-130-1jx90kyy
+  tags:
   - None
+  walltime: 0
+lr_scheduling:
+  decay:
+    decay_rate: 0.1
+    interval: 50
+  multi_step_lr:
+    milestones:
+    - 25
+    - 50
+    - 75
+    - 100
+    scheduler_gamma: 0.5
+  params:
+  - lr_max
 model_1:
   activation: gelu
   fc_dim: 128
@@ -43,41 +61,36 @@ model_2:
   modes2:
   - 20
 test_data:
-  offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train.pt
-  sub_t: 1
-  sub_x: 32
-  nx: 4096
   nt: 128
+  nx: 4096
+  offset: None
+  path: /home/rishi/projects/anandkumar/data/wave1D/wave1D-train.pt
+  sub_t: 1
+  sub_x: 32
 train_data:
+  nt: 100
+  nx: 4096
   offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-test.pt
+  path: /home/rishi/projects/anandkumar/data/wave1D/wave1D-test.pt
   sub_t: 1
   sub_x: 32
-  nx: 4096
-  nt: 100
-valid_data:
-  offset: None
-  path: /groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-valid.pt
-  sub_t: 1
-  sub_x: 32
-  nx: 4096
-  nt: 100
 train_params:
+  acgd_beta: 0.99
   base_lr: 0.001
   batchsize: 1
   cg_tolerance: 0.0001
-  epochs: 10000
+  epochs: 150
   f_loss: 1.0
   ic_loss: 5
-  lr_max: 0.025
-  lr_min: 0.005
-  acgd_beta: .99
-  scheduler_gamma: 0.5
-  xy_loss: 0
   loss: rel
-early_stopping: 
-  minutes: 5
-  patience: 2
-  delta: .001
-  use: false
+  lr_max: 1
+  lr_min: 0.0001
+  xy_loss: 0
+valid_data:
+  nt: 100
+  nx: 4096
+  offset: None
+  path: /home/rishi/projects/anandkumar/data/wave1D/wave1D-valid.pt
+  sample_proportion: 1
+  sub_t: 1
+  sub_x: 32

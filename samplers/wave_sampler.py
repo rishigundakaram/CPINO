@@ -191,4 +191,4 @@ if __name__ == "__main__":
     wave_eq = WaveEq1D(Nx=Nx, c=c, dt=dt, device=device)
     U = vmap(wave_eq.wave_driver, in_dims=(0, None))(U0, save_int)
 
-    torch.save({"a": U0, "u": U}, '../wave1D/wave1D-valid.pt')
+    torch.save({"a": U0, "u": U}, 'wave1D-valid.pt')

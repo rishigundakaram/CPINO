@@ -11,9 +11,9 @@ def linspace(a, b, num):
 # walltime="43:00:00"
 # experiment_name='CPINO_NS3D_Re500'
 
-experiment_file='varying_data_Re500.yaml'
-walltime="43:00:00"
-experiment_name='varying_data_Re500'
+experiment_file='Wave1D.yaml'
+walltime="01:10:00"
+experiment_name='Wave1D'
 
 base_dir='../'
 experiment_dir='experiments/'
@@ -77,9 +77,9 @@ f"""#!/bin/bash
 #SBATCH --mail-type=FAIL"""
             )
             file.write('\n')
-            train_str =  f'python {os.path.join(base_dir, "run.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
+            train_str =  f'python {os.path.join(base_dir, "train.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
             file.write(f"{train_str}\n")
-            eval_str =  f'python {os.path.join(base_dir, "eval.py")} --log --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
+            eval_str =  f'python {os.path.join(base_dir, "eval.py")} --config_path {os.path.join(base_dir, experiment_dir, run_dir, experiment_name, f"configs/{pde}")}-{idx}.yaml'
             file.write(f"{eval_str}\n")
     sh_path = os.path.join(path, 'run.sh')
     with open(sh_path, 'w+') as run: 

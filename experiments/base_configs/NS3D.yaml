@@ -113,4 +113,17 @@ train_params:
   scheduler_gamma: 0.5
   xy_loss: 10
 valid_data:
-  sample_proportion: 0.2
+  sample_proportion: .2
+lr_scheduling:
+  decay:
+    decay_rate: 0.5
+    interval: 50
+  multi_step_lr:
+    milestones:
+    - 25
+    - 50
+    - 75
+    - 100
+    scheduler_gamma: 0.5
+  params:
+  - lr_max

@@ -1,0 +1,31 @@
+
+- info: 
+    model: ['PINO']
+    walltime: [60]
+  train_params: 
+    epochs: [1000000]
+    xy_loss: [5]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1]
+    base_lr: [.0001] 
+  train_data: 
+    path: ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train.pt']
+  test_data: 
+    path: ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-test.pt']
+- info: 
+    model: ['CPINO']
+    walltime: [60]
+  train_params: 
+    epochs: [1000000]
+    xy_loss: [5, 0]
+    f_loss: [1]
+    ic_loss: [5]
+    batchsize: [1, 5]
+    lr_max: [5, 1, 0.5] 
+    lr_min: [.001, .0001]
+    acgd_beta: [.9, .99, .999]
+  train_data: 
+    path: ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-train.pt']
+  test_data: 
+    path: ['/groups/tensorlab/rgundaka/code/CPINO/data/wave1D/wave1D-test.pt']
