@@ -20,9 +20,9 @@ class decay_schedule:
         if self.count == self.interval: 
             self.count = 0
             if 'lr_min' in self.optim_params: 
-                self.optimizer.state['lr_min'] /= self.decay_rate
+                self.optimizer.state['lr_min'] *= self.decay_rate
             if 'lr_max' in self.optim_params: 
-                self.optimizer.state['lr_max'] /= self.decay_rate
+                self.optimizer.state['lr_max'] *= self.decay_rate
                 if self.optimizer.state['lr_max'] < self.optimizer.state['lr_min']: 
                     self.optimizer.state['lr_max'] = self.optimizer.state['lr_min']  
     

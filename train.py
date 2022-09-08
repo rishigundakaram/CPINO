@@ -185,7 +185,7 @@ if __name__ == '__main__':
             logger(total_loss, prefix='train')
         pbar.set_description(dict_to_str(total_loss))
         elapsed = time() - start_time
-        if runtime_min is not None and elapsed > runtime_min * 60: 
+        if runtime_min != 0 and elapsed > runtime_min * 60: 
             break
         
         if config['valid_data']['sample_proportion']:
