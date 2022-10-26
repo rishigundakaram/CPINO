@@ -3,10 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from CGDs import ACGD
+from CGDs import GACGD
 
 from .PINO import FNN2d, FNN3d
-from .basics import SpectralConv2d, Model
+from .basics import Model
 from train_utils.adam import Adam, NAdam
 from .PINN import simpleLinear
 
@@ -17,8 +17,9 @@ class CPINO(Model):
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         model_1_params = params['model_1']
         model_2_params = params['model_2']
-        self.dim = 4 if 'modes3' in model_1_params else 3
-        self.formulation = params['info']['formulation']
+        self.dim = 4
+        # self.dim = 4 if 'modes3' in model_1_params else 3
+        self.formulation = params['train_params']['loss_formulation']
             
         if self.formulation == 'lagrangian':
             discriminator_out_dim = 2 
@@ -32,7 +33,8 @@ class CPINO(Model):
                 fc_dim=model_1_params['fc_dim'], 
                 layers=model_1_params['layers'],
                 in_dim=self.dim, 
-                out_dim=1
+                out_dim=1,
+                pad_ratio=model_1_params['pad_ratio']
             ).to(device)
             self.Discriminator = FNN3d(
                 modes1=model_2_params['modes1'], 
@@ -42,6 +44,7 @@ class CPINO(Model):
                 layers=model_2_params['layers'],
                 in_dim=self.dim, 
                 out_dim=discriminator_out_dim,
+                pad_ratio=model_1_params['pad_ratio']
             ).to(device)
         else:
             self.model = FNN2d(
@@ -63,10 +66,10 @@ class CPINO(Model):
             ).to(device)
 
         train_params = params['train_params']
-        self.optimizer = ACGD(max_params=self.Discriminator.parameters(), 
-                        min_params=self.model.parameters(), 
-                        lr_min=train_params['lr_min'], 
-                        lr_max=train_params['lr_max'], 
+        self.optimizer = GACGD(x_params=self.Discriminator.parameters(), 
+                        y_params=self.model.parameters(), 
+                        lr_x=train_params['lr_min'], 
+                        lr_y=train_params['lr_max'], 
                         tol=train_params["cg_tolerance"], 
                         beta=train_params['acgd_beta'])
             
@@ -87,7 +90,9 @@ class CPINO(Model):
 
     def predict(self, x): 
         out = self.model(x)
+        print(out.size())
         out_w = self.Discriminator(x)
+        print(out_w.size())
         ret = {}
         ret["output"] = out
         if self.dim == 3: 

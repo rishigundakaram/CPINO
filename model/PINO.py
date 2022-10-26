@@ -7,12 +7,15 @@ import torch.nn.functional as F
 from train_utils.adam import Adam
 
 from .basics import SpectralConv2d, SpectralConv3d, Model
+from .utils import add_padding, remove_padding, _get_act
+
 
 
 class PINO(Model): 
     def __init__(self, params) -> None:
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         cur_params = params['model_1']
+        self.dim = 4
         if 'modes3' in cur_params: 
             print('using 3d')
             self.model =  FNN3d(
@@ -21,7 +24,7 @@ class PINO(Model):
                 modes3=cur_params['modes3'], 
                 fc_dim=cur_params['fc_dim'], 
                 layers=cur_params['layers'],
-                in_dim=4, 
+                in_dim=self.dim, 
             ).to(device)
         else: 
             self.model =  FNN2d(
@@ -42,6 +45,7 @@ class PINO(Model):
         loss["loss"].backward()
         self.optimizer.step() 
         self.optimizer.zero_grad()
+        self.scheduler.step()
 
 
 class FNO(PINO): 
@@ -129,20 +133,31 @@ class FNN2d(nn.Module):
         return x
 
 class FNN3d(nn.Module):
-    def __init__(self, modes1, modes2, modes3, width=16, fc_dim=128, layers=None, in_dim=4, out_dim=1):
+    def __init__(self, 
+                 modes1, modes2, modes3,
+                 width=16, 
+                 fc_dim=128,
+                 layers=None,
+                 in_dim=4, out_dim=1,
+                 act='tanh', 
+                 pad_ratio=0):
         '''
         Args:
             modes1: list of int, first dimension maximal modes for each layer
             modes2: list of int, second dimension maximal modes for each layer
             modes3: list of int, third dimension maximal modes for each layer
             layers: list of int, channels for each layer
+            fc_dim: dimension of fully connected layers
             in_dim: int, input dimension
             out_dim: int, output dimension
+            act: {tanh, gelu, relu, leaky_relu}, activation function
+            pad_ratio: the ratio of the extended domain
         '''
         super(FNN3d, self).__init__()
         self.modes1 = modes1
         self.modes2 = modes2
         self.modes3 = modes3
+        self.pad_ratio = pad_ratio
 
         if layers is None:
             self.layers = [width] * 4
@@ -160,17 +175,16 @@ class FNN3d(nn.Module):
 
         self.fc1 = nn.Linear(layers[-1], fc_dim)
         self.fc2 = nn.Linear(fc_dim, out_dim)
+        self.act = _get_act(act)
 
     def forward(self, x):
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         '''
         Args:
             x: (batchsize, x_grid, y_grid, t_grid, 3)
-
         Returns:
             u: (batchsize, x_grid, y_grid, t_grid, 1)
-
         '''
+        x = add_padding(x, pad_ratio=self.pad_ratio)
         length = len(self.ws)
         batchsize = x.shape[0]
         size_x, size_y, size_z = x.shape[1], x.shape[2], x.shape[3]
@@ -183,9 +197,10 @@ class FNN3d(nn.Module):
             x2 = w(x.view(batchsize, self.layers[i], -1)).view(batchsize, self.layers[i+1], size_x, size_y, size_z)
             x = x1 + x2
             if i != length - 1:
-                x = torch.tanh(x)
+                x = self.act(x)
         x = x.permute(0, 2, 3, 4, 1)
         x = self.fc1(x)
-        x = torch.tanh(x)
+        x = self.act(x)
         x = self.fc2(x)
+        x = remove_padding(x, pad_ratio=self.pad_ratio)
         return x

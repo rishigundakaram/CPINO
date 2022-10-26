@@ -1,10 +1,12 @@
 from random import sample
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, Subset
 import torch.nn.functional as F
 import numpy as np
-from .utils import get_grid3d, get_forcing
-from math import floor
+from .utils import get_grid3d, get_forcing, GaussianRF, online_loader
+from math import floor, pi
+from .loss import PINO_FDM
+
 
 class problem: 
     def __init__(self, config, d=2, p=2, size_average=True, reduction=True) -> None:
@@ -17,14 +19,6 @@ class problem:
         self.p = p
         self.size_average = size_average
         self.reduction = reduction
-
-    def loss(self, input, target, prediction, bets=None): 
-        data_err =  torch.norm(prediction - target)
-        loss = {
-            "L2 data error": data_err, 
-            "loss": self.data_weight * data_err
-        }
-        return loss
 
     def abs(self, x, y):
         num_examples = x.size()[0]
@@ -170,172 +164,101 @@ class NS3D(problem):
     def __init__(self, config) -> None:
         super().__init__(config)
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        train_config = config['train_data']
-        path_1 = train_config['path1']
-        path_2 = None
-        if 'path2' in train_config.keys(): 
-            path_2 = train_config['path2']
-        train_loader = NSDataset(datapath1=path_1, datapath2=path_2,
-                          nx=train_config['nx'], nt=train_config['nt'],
-                          sub=train_config['sub_x'], sub_t=train_config['sub_t'],
-                          t_interval=train_config['time_interval'])
+        train_config = config['data']
+        dataset = NS3DDataset(
+            paths=config['data']['paths'], 
+            raw_res=config['data']['raw_res'],
+            data_res=config['data']['data_res'], 
+            pde_res=config['data']['pde_res'], 
+            n_samples=config['data']['n_samples'], 
+            offset=config['data']['offset'], 
+            t_duration=config['data']['t_duration']
+            )
         
-        train_num_samples = config['train_data']['ns']
-        if 'valid_data' in config.keys(): 
-            sample_proportion = config['valid_data']['sample_proportion']
-            if sample_proportion: 
-                offset = floor(sample_proportion*train_num_samples)
-                train_num_samples -= offset
+        idxs = torch.randperm(len(dataset))
+        # setup train and test
+        num_valid = config['data']['n_valid_samples']
+        num_train = len(idxs) - num_valid
+        print(f'Number of training samples: {num_train};\nNumber of validation samples: {num_valid}.')
+        train_idx = idxs[:num_train]
+        test_idx = idxs[num_train:]
 
-                self.valid_loader = train_loader.make_loader(offset,
-                                    batch_size=config['train_params']['batchsize'],
-                                    start=train_num_samples,
-                                    train=train_config['shuffle'])
+        trainset = Subset(dataset, indices=train_idx)
+        valset = Subset(dataset, indices=test_idx)
+        
+        batchsize = config['train']['batchsize']
+        self.train_loader = DataLoader(trainset, batch_size=batchsize, num_workers=4, shuffle=True)
 
-        self.train_loader = train_loader.make_loader(train_num_samples,
-                                batch_size=config['train_params']['batchsize'],
-                                start=0,
-                                train=True)
-        test_config = config['test_data']
-        test_loader = NSDataset(datapath1=test_config['path'],
-                          nx=test_config['nx'], nt=test_config['nt'],
-                          sub=test_config['sub_x'], sub_t=test_config['sub_t'],
-                          t_interval=test_config['time_interval'])
-        self.test_loader = test_loader.make_loader(test_loader.data.size()[0],
-                                batch_size=1,
-                                start=0,
-                                train=False)
+        self.valid_loader = DataLoader(valset, batch_size=batchsize, num_workers=4)
+        
+        if config['train_params']['tts_batchsize'] > 0: 
+            tts_sampler = GaussianRF(2, config['tts_train_data']['nx'], 2 * pi, alpha=2.5, tau=7, device=device)
+            self.tts_loader = online_loader(tts_sampler,
+                             S=config['tts_train_data']['nx'],
+                             T=config['tts_train_data']['nt'],
+                             time_scale=config['tts_train_data']['time_interval'],
+                             batchsize=config['train_params']['tts_batchsize'])
         self.v = 1 / config['train_data']['Re']
-        self.train_forcing = get_forcing(train_config['nx'] // train_config['sub_x']).to(device)
-        self.test_forcing = get_forcing(test_config['nx'] // test_config['sub_x']).to(device)
+        self.forcing = get_forcing(train_config['nx'] // train_config['sub_x']).to(device)
+        self.physics_truth = PINO_FDM
         self.train_t_interval = train_config['time_interval']
-        self.test_t_interval = test_config['time_interval']
     
-    def _FDM(self, w, v=1/40, t_interval=1.0):
-        batchsize = w.size(0)
-        nx = w.size(1)
-        ny = w.size(2)
-        nt = w.size(3)
-        device = w.device
-        w = w.reshape(batchsize, nx, ny, nt)
 
-        w_h = torch.fft.fft2(w, dim=[1, 2])
-        # Wavenumbers in y-direction
-        k_max = nx//2
-        N = nx
-        k_x = torch.cat((torch.arange(start=0, end=k_max, step=1, device=device),
-                        torch.arange(start=-k_max, end=0, step=1, device=device)), 0).reshape(N, 1).repeat(1, N).reshape(1,N,N,1)
-        k_y = torch.cat((torch.arange(start=0, end=k_max, step=1, device=device),
-                        torch.arange(start=-k_max, end=0, step=1, device=device)), 0).reshape(1, N).repeat(N, 1).reshape(1,N,N,1)
-        # Negative Laplacian in Fourier space
-        lap = (k_x ** 2 + k_y ** 2)
-        lap[0, 0, 0, 0] = 1.0
-        f_h = w_h / lap
+class NS3DDataset(Dataset):
+    def __init__(self, paths, 
+                 data_res, pde_res,
+                 n_samples=None, 
+                 offset=0,
+                 t_duration=1.0, 
+                 sub_x=1, 
+                 sub_t=1,
+                 train=True):
+        super().__init__()
+        self.data_res = data_res
+        self.pde_res = pde_res
+        self.t_duration = t_duration
+        self.paths = paths
+        self.offset = offset
+        self.n_samples = n_samples
+        self.load(train=train, sub_x=sub_x, sub_t=sub_t)
+    
+    def load(self, train=True, sub_x=1, sub_t=1):
+        data_list = []
+        for datapath in self.paths:
+            batch = np.load(datapath, mmap_mode='r+')
 
-        ux_h = 1j * k_y * f_h
-        uy_h = -1j * k_x * f_h
-        wx_h = 1j * k_x * w_h
-        wy_h = 1j * k_y * w_h
-        wlap_h = -lap * w_h
-
-        ux = torch.fft.irfft2(ux_h[:, :, :k_max + 1], dim=[1, 2])
-        uy = torch.fft.irfft2(uy_h[:, :, :k_max + 1], dim=[1, 2])
-        wx = torch.fft.irfft2(wx_h[:, :, :k_max+1], dim=[1,2])
-        wy = torch.fft.irfft2(wy_h[:, :, :k_max+1], dim=[1,2])
-        wlap = torch.fft.irfft2(wlap_h[:, :, :k_max+1], dim=[1,2])
-
-        dt = t_interval / (nt-1)
-        wt = (w[:, :, :, 2:] - w[:, :, :, :-2]) / (2 * dt)
-
-        Du1 = wt + (ux*wx + uy*wy - v*wlap)[...,1:-1] #- forcing
-        return Du1
-
-
-    def physics_truth(self, u, u0, **kwargs):
-        batchsize = u.size(0)
-        nx = u.size(1)
-        ny = u.size(2)
-        nt = u.size(3)
-
-        u = u.reshape(batchsize, nx, ny, nt)
-        v = kwargs['v']
-        t_interval = kwargs['t_interval']
-        forcing = kwargs['forcing']
-        u_in = u[:, :, :, 0]
-
-        Du = self._FDM(u, v, t_interval)
-        f = forcing.repeat(batchsize, 1, 1, nt-2)
-        return u0[:, :, :, 0, 3], u_in, f, Du
-
-
-class NSDataset(object):
-    def __init__(self, datapath1,
-                 nx, nt,
-                 datapath2=None, sub=1, sub_t=1, t_interval=1.0):
-        '''
-        Load data from npy and reshape to (N, X, Y, T)
-        Args:
-            datapath1: path to data
-            nx:
-            nt:
-            datapath2: path to second part of data, default None
-            sub:
-            sub_t:
-            N:
-            t_interval:
-        '''
-        self.S = nx // sub
-        self.T = int(nt * t_interval) // sub_t + 1
-        self.time_scale = t_interval
-        data1 = np.load(datapath1)
-        data1 = torch.tensor(data1, dtype=torch.float)[..., ::sub_t, ::sub, ::sub]
-        if datapath2 is not None:
-            data2 = np.load(datapath2)
-            data2 = torch.tensor(data2, dtype=torch.float)[..., ::sub_t, ::sub, ::sub]
-
-        if t_interval == 0.5:
-            data1 = self.extract(data1)
-            if datapath2 is not None:
-                data2 = self.extract(data2)
-        part1 = data1.permute(0, 2, 3, 1)
-        if datapath2 is not None:
-            part2 = data2.permute(0, 2, 3, 1)
-            self.data = torch.cat((part1, part2), dim=0)
-        else:
-            self.data = part1
-
-    def make_loader(self, n_sample, batch_size, start=0, train=True):
-        if train:
-            print(self.data[start:start + n_sample, :, :, 0].size())
-            a_data = self.data[start:start + n_sample, :, :, 0].reshape(n_sample, self.S, self.S)
-            u_data = self.data[start:start + n_sample].reshape(n_sample, self.S, self.S, self.T)
-        else:
-            a_data = self.data[-n_sample:, :, :, 0].reshape(n_sample, self.S, self.S)
-            u_data = self.data[-n_sample:].reshape(n_sample, self.S, self.S, self.T)
-        a_data = a_data.reshape(n_sample, self.S, self.S, 1, 1).repeat([1, 1, 1, self.T, 1])
-        gridx, gridy, gridt = get_grid3d(self.S, self.T, time_scale=self.time_scale)
-        a_data = torch.cat((gridx.repeat([n_sample, 1, 1, 1, 1]), gridy.repeat([n_sample, 1, 1, 1, 1]),
-                            gridt.repeat([n_sample, 1, 1, 1, 1]), a_data), dim=-1)
-        dataset = torch.utils.data.TensorDataset(a_data, u_data)
-        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=train)
-        return loader
-
-    def make_dataset(self, n_sample, start=0, train=True):
-        if train:
-            a_data = self.data[start:start + n_sample, :, :, 0].reshape(n_sample, self.S, self.S)
-            u_data = self.data[start:start + n_sample].reshape(n_sample, self.S, self.S, self.T)
-        else:
-            a_data = self.data[-n_sample:, :, :, 0].reshape(n_sample, self.S, self.S)
-            u_data = self.data[-n_sample:].reshape(n_sample, self.S, self.S, self.T)
-        a_data = a_data.reshape(n_sample, self.S, self.S, 1, 1).repeat([1, 1, 1, self.T, 1])
-        gridx, gridy, gridt = get_grid3d(self.S, self.T)
+            batch = torch.from_numpy(batch[:, ::sub_t, ::sub_x, ::sub_x]).to(torch.float32)
+            if self.t_duration == 0.5:
+                batch = self.extract(batch)
+            data_list.append(batch.permute(0, 2, 3, 1))
+        data = torch.cat(data_list, dim=0)
+        if self.n_samples:
+            if train:
+                data = data[self.offset: self.offset + self.n_samples]
+            else:
+                data = data[self.offset + self.n_samples:]
+        
+        N = data.shape[0]
+        S = data.shape[1]
+        T = data.shape[-1]
+        a_data = data[:, :, :, 0:1, None].repeat([1, 1, 1, T, 1])
+        gridx, gridy, gridt = get_grid3d(S, T)
         a_data = torch.cat((
-            gridx.repeat([n_sample, 1, 1, 1, 1]),
-            gridy.repeat([n_sample, 1, 1, 1, 1]),
-            gridt.repeat([n_sample, 1, 1, 1, 1]),
+            gridx.repeat([N, 1, 1, 1, 1]),
+            gridy.repeat([N, 1, 1, 1, 1]),
+            gridt.repeat([N, 1, 1, 1, 1]),
             a_data), dim=-1)
-        dataset = torch.utils.data.TensorDataset(a_data, u_data)
-        return dataset
+        self.data = data        # N, S, S, T, 1
+        self.a_data = a_data    # N, S, S, T, 4
+        
+        self.data_s_step = data.shape[1] // self.data_res[0]
+        self.data_t_step = data.shape[3] // (self.data_res[2] - 1)
+
+    def __getitem__(self, idx):
+        return self.data[idx, ::self.data_s_step, ::self.data_s_step, ::self.data_t_step], self.a_data[idx]
+
+    def __len__(self, ):
+        return self.data.shape[0]
 
     @staticmethod
     def extract(data):
@@ -343,7 +266,6 @@ class NSDataset(object):
         Extract data with time range 0-0.5, 0.25-0.75, 0.5-1.0, 0.75-1.25,...
         Args:
             data: tensor with size N x 129 x 128 x 128
-
         Returns:
             output: (4*N-1) x 65 x 128 x 128
         '''
@@ -363,95 +285,136 @@ class NSDataset(object):
                     new_data[i * 4 + j, interval: T + 1] = data[i + 1, 0:interval + 1]
         return new_data
 
-class Loss():
-    def __init__(self, config, physics_truth, p=2, forcing=None, v=None, t_interval=None):
-        self.model = config['info']['model']
-        self.physics = physics_truth
-        self.ic_weight = config['train_params']['ic_loss']
-        self.f_weight = config['train_params']['f_loss']
-        self.data_weight = config['train_params']['xy_loss']
-        self.formulation = config['info']['formulation']
-        self.loss = config['train_params']['loss']
-        self.forcing = forcing
-        self.v = v
-        self.t_interval = t_interval
-        self.p = p
-
-    def L2(self, x, y, weights=None):
-        num_examples = x.size()[0]
-        #Assume uniform mesh
-        h = 1.0 / (x.size()[1] - 1.0)
-        if weights is None: 
-            all_norms = h*torch.norm(x.view(num_examples,-1) - y.view(num_examples,-1), self.p, 1)
-        else:
-            size = weights.size()
-            w = weights.expand(num_examples,*size)
-            sq = (x.view(num_examples,-1) - y.view(num_examples,-1))**2
-            all_norms = w.view(num_examples, -1)*sq
-        return torch.mean(all_norms)
-    
-    def rel(self, x, y):
-        num_examples = x.size()[0]
-
-        diff_norms = torch.norm(x.reshape(num_examples,-1) - y.reshape(num_examples,-1), self.p, 1)
-        y_norms = torch.norm(y.reshape(num_examples,-1), self.p, 1)
-        return torch.mean(diff_norms/y_norms)
-
-
-    def L2_physics_loss(self, u, u0): 
-        ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0, forcing=self.forcing, v=self.v, t_interval=self.t_interval)
-        ic_loss = self.L2(ic_truth, ic_pred)
-        f_loss = self.L2(f_truth, f_pred) 
-        return ic_loss, f_loss
-
-    def w_physics_loss(self, u, u0, ic_weights, f_weights): 
-        ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0, forcing=self.forcing, v=self.v, t_interval=self.t_interval)
-        if self.model == "SAPINO" or self.model == "SAPINN": 
-            ic_loss_w = self.L2(ic_truth, ic_pred, weights=ic_weights)
-        else: 
-            ic_loss_w = self.cLoss(ic_truth, ic_pred, ic_weights)
+class KF(problem): 
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        train_config = config['data']
+        dataset = KFDataset(
+            paths=config['data']['paths'], 
+            raw_res=config['data']['raw_res'],
+            data_res=config['data']['data_res'], 
+            pde_res=config['data']['pde_res'], 
+            n_samples=config['data']['total_samples'], 
+            offset=0, 
+            t_duration=config['data']['time_interval']
+            )
         
-        if self.model == "SAPINO" or self.model == "SAPINN": 
-            f_loss_w =self.L2(f_truth, f_pred, weights=f_weights)
-        else: 
-            f_loss_w = self.cLoss(f_truth, f_pred, f_weights)
-        return ic_loss_w, f_loss_w
+        idxs = torch.randperm(len(dataset))
+        # setup train and test
+        num_valid = config['data']['n_valid_samples']
+        num_train = len(idxs) - num_valid
+        print(f'Number of training samples: {num_train};\nNumber of validation samples: {num_valid}.')
+        train_idx = idxs[:num_train]
+        test_idx = idxs[num_train:]
 
-    def cLoss(self, x, y, weights):
-        num_examples = x.size()[0]
-        errs_w = torch.mean(weights.reshape(num_examples, -1) * (x.reshape(num_examples, -1)-y.reshape(num_examples, -1)))
-        return errs_w
-    
-    def __call__(self, input, target, prediction):
-        output = prediction["output"]
-        loss = {}
-        data_loss = self.L2(output, target)
-        rel_data_loss = self.rel(output, target)
-        ic_loss, f_loss = self.L2_physics_loss(output, input)
-        loss["rel data loss"] = rel_data_loss.item()
-        loss["L2 data loss"] = data_loss.item()
-        loss["L2 ic loss"] = ic_loss.item()
-        loss["L2 f loss"] = f_loss.item()
-        loss["L2 loss"] = self.ic_weight * ic_loss.item() + self.f_weight * f_loss.item() + self.data_weight * data_loss.item()
-        if self.model in ["CPINN", "CPINO", "SAPINN", "SAPINO", "CPINO-split"]: 
-            ic_weights = prediction["ic_weights"]
-            f_weights = prediction["f_weights"]
-            if self.formulation == 'competitive': 
-                data_weights = prediction['data_weights']
-                data_loss = self.cLoss(output, target, weights=data_weights)
-                loss["weighted data loss"] = data_loss.item()
-            ic_loss_w, f_loss_w, = self.w_physics_loss(
-                output, input, ic_weights, f_weights
-                )
-            if self.loss == 'rel': 
-                loss["loss"] = self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * rel_data_loss
-            else: 
-                loss["loss"] = self.ic_weight * ic_loss_w + self.f_weight * f_loss_w + self.data_weight * data_loss
-            loss["weighted f err"] =  f_loss_w.item()
-            loss["weighted ic err"] = ic_loss_w.item()
+        trainset = Subset(dataset, indices=train_idx)
+        valset = Subset(dataset, indices=test_idx)
+        
+        batchsize = config['train_params']['batchsize']
+        self.train_loader = DataLoader(trainset, batch_size=batchsize, num_workers=4, shuffle=True)
+
+        self.valid_loader = DataLoader(valset, batch_size=batchsize, num_workers=4)
+        nx = config['data']['pde_res'][0]
+        nt = config['data']['pde_res'][2]
+        if config['train_params']['tts_batchsize'] > 0: 
+            
+            tts_sampler = GaussianRF(2, nx, 2 * pi, alpha=2.5, tau=7, device=device)
+            self.tts_loader = online_loader(tts_sampler,
+                             S=nx,
+                             T=nt,
+                             time_scale=config['data']['time_interval'],
+                             batchsize=config['train_params']['tts_batchsize'])
+        self.v = 1 / config['data']['Re']
+        self.forcing = get_forcing(nx).to(device)
+        print(self.forcing.size())
+        self.physics_truth = PINO_FDM
+        self.train_t_interval = train_config['time_interval']
+
+class KFDataset(Dataset):
+    def __init__(self, paths, 
+                 data_res, pde_res, 
+                 raw_res, 
+                 n_samples=None, 
+                 offset=0,
+                 t_duration=1.0):
+        super().__init__()
+        self.data_res = data_res    # data resolution
+        self.pde_res = pde_res      # pde loss resolution
+        self.raw_res = raw_res      # raw data resolution
+        self.t_duration = t_duration
+        self.paths = paths
+        self.offset = offset
+        self.n_samples = n_samples
+        if t_duration == 1.0:
+            self.T = self.pde_res[2]
         else:
-            if self.loss == 'rel': 
-                loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * rel_data_loss
-            else: 
-                loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss
-        return loss
+            self.T = int(self.pde_res[2] * t_duration) + 1    # number of points in time dimension
+
+        self.load()
+
+        self.data_s_step = pde_res[0] // data_res[0]
+        self.data_t_step = (pde_res[2] - 1) // (data_res[2] - 1)
+
+    def load(self):
+        datapath = self.paths[0]
+        raw_data = np.load(datapath, mmap_mode='r+')
+        print(np.shape(raw_data))
+        # subsample ratio
+        sub_x = self.raw_res[0] // self.data_res[0]
+        sub_t = (self.raw_res[2] - 1) // (self.data_res[2] - 1)
+        
+        a_sub_x = self.raw_res[0] // self.pde_res[0]
+        # load data
+        data = raw_data[self.offset: self.offset + self.n_samples, ::sub_t, ::sub_x, ::sub_x]
+        print(np.shape)
+        # divide data
+        if self.t_duration != 0.:
+            end_t = self.raw_res[2] - 1
+            K = int(1/self.t_duration)
+            step = end_t // K
+            data = self.partition(data)
+            a_data = raw_data[self.offset: self.offset + self.n_samples, 0:end_t:step, ::a_sub_x, ::a_sub_x]
+            a_data = a_data.reshape(self.n_samples * K, 1, self.pde_res[0], self.pde_res[1])    # 2N x 1 x S x S
+        else:
+            a_data = raw_data[self.offset: self.offset + self.n_samples, 0:1, ::a_sub_x, ::a_sub_x]
+
+        # convert into torch tensor
+        data = torch.from_numpy(data).to(torch.float32)
+        a_data = torch.from_numpy(a_data).to(torch.float32).permute(0, 2, 3, 1)
+        self.data = data.permute(0, 2, 3, 1)
+
+        S = self.pde_res[1]
+        
+        a_data = a_data[:, :, :, :, None]   # N x S x S x 1 x 1
+        gridx, gridy, gridt = get_grid3d(S, self.T)
+        self.grid = torch.cat((gridx[0], gridy[0], gridt[0]), dim=-1)   # S x S x T x 3
+        self.a_data = a_data
+
+    def partition(self, data):
+        '''
+        Args:
+            data: tensor with size N x T x S x S
+        Returns:
+            output: int(1/t_duration) *N x (T//2 + 1) x 128 x 128
+        '''
+        N, T, S = data.shape[:3]
+        K = int(1 / self.t_duration)
+        new_data = np.zeros((K * N, T // K + 1, S, S))
+        step = T // K
+        for i in range(N):
+            for j in range(K):
+                new_data[i * K + j] = data[i, j * step: (j+1) * step + 1]
+        return new_data
+
+
+    def __getitem__(self, idx):
+        a_data = torch.cat((
+            self.grid, 
+            self.a_data[idx].repeat(1, 1, self.T, 1)
+        ), dim=-1)
+        return a_data, self.data[idx], 
+
+    def __len__(self, ):
+        return self.data.shape[0]
+

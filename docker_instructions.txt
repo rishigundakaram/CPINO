@@ -1,0 +1,4 @@
+docker build -t cpino:dev .
+cd ..
+docker run -it --name cpino --gpus=all --rm  -u 0 --volume /:/src cpino:dev /bin/bash
+docker run -it --name cpino --gpus=all --rm  -u 0 --volume /:projects/ cpino:dev python /projects/CPINO/train.py --log --config_path /projects/CPINO/experiments/runs/mixed_IC/configs/NS3D-01.yaml 

@@ -59,7 +59,7 @@ def eval_loss(loader, model, loss):
     for x, y in loader: 
         x, y = x.to(device), y.to(device)
         output = model.predict(x)
-        cur_loss = loss(x, y, output)
+        cur_loss = loss(x, output, y)
         total_loss = update_loss_dict(total_loss, cur_loss)
     total_loss = loss_metrics(total_loss) 
     return total_loss

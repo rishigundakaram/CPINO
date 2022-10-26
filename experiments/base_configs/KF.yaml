@@ -5,14 +5,13 @@ early_stopping:
   use: false
 info:
   entity: rishigundakaram
-  group: test
-  model: CPINO
-  name: NS
-  project: NS3D
-  save_dir: /projects/CPINO/experiments/runs/test
+  group: KF
+  model: PINO
+  project: KF
+  name: KF
+  save_dir: /src/home/rishi/projects/CPINO/experiments/runs/KF
   save_name: logical-dream-18-695d3i5g
-  tags: [None]
-  walltime: 1
+  walltime: 0
 model_1:
   activation: gelu
   fc_dim: 128
@@ -20,7 +19,7 @@ model_1:
   modes1: [8, 8, 8, 8]
   modes2: [8, 8, 8, 8]
   modes3: [8, 8, 8, 8]
-  pad_rato: 1/16
+  pad_ratio: .0625
 model_2:
   activation: gelu
   competitive_output: [f, ic, data]
@@ -29,31 +28,28 @@ model_2:
   modes1: [4]
   modes2: [4]
   modes3: [4]
-  pad_ratio: 1/16
+  pad_ratio: .0625
 test:
-  data_res: [256, 256, 257]
+  res: [256, 256, 513]
   batchsize: 1
 data:
   Re: 500
-  paths: ['/projects/data/NS/NS_fft_Re500_T4000.npy']
+  paths: ['/src/raid/hongkai/NS-Re500_T300_id0.npy']
   raw_res: [256, 256, 513]
   data_res: [64, 64, 129]
   pde_res: [128, 128, 257]
-  a_offset: 0
-  n_a_samples: 250
-  valid_offset: 200
+  total_samples: 300
+  n_train_samples: 250
   n_valid_samples: 50
   shuffle: True
   time_interval: .5
-valid_data: 
-  ns: 300
 train_params:
-  loss_formulation: competitive
+  loss_formulation: lagrangian
   base_lr: 0.001
   batchsize: 1
-  tts_batchsize: 1
+  tts_batchsize: 0
   cg_tolerance: 0.0001
-  epochs: 3
+  epochs: 1
   f_loss: 1.0
   ic_loss: 5
   xy_loss: 10
