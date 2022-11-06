@@ -1,3 +1,28 @@
+data:
+  Re: 500
+  a_offset: 0
+  data_res:
+  - 64
+  - 64
+  - 257
+  n_a_samples: 275
+  n_data_samples: 100
+  n_test_samples: 25
+  offset: 0
+  paths:
+  - /src/raid/hongkai/NS-Re500_T300_id0-shuffle.npy
+  pde_res:
+  - 128
+  - 128
+  - 257
+  raw_res:
+  - 256
+  - 256
+  - 513
+  shuffle: true
+  t_duration: 0.125
+  testoffset: 275
+  total_num: 300
 early_stopping:
   delta: 0.001
   min_epochs: 10
@@ -6,59 +31,12 @@ early_stopping:
 info:
   entity: rishigundakaram
   group: KF
-  model: PINO
-  project: KF
+  model: CPINO
   name: KF
+  project: KF
   save_dir: /src/home/rishi/projects/CPINO/experiments/runs/KF
-  save_name: logical-dream-18-695d3i5g
-  walltime: 0
-model_1:
-  activation: gelu
-  fc_dim: 128
-  layers: [64, 64, 64, 64, 64]
-  modes1: [8, 8, 8, 8]
-  modes2: [8, 8, 8, 8]
-  modes3: [8, 8, 8, 8]
-  pad_ratio: .0625
-model_2:
-  activation: gelu
-  competitive_output: [f, ic, data]
-  fc_dim: 64
-  layers: [32]
-  modes1: [4]
-  modes2: [4]
-  modes3: [4]
-  pad_ratio: .0625
-test:
-  res: [256, 256, 513]
-  batchsize: 1
-data:
-  Re: 500
-  paths: ['/src/raid/hongkai/NS-Re500_T300_id0.npy']
-  raw_res: [256, 256, 513]
-  data_res: [64, 64, 129]
-  pde_res: [128, 128, 257]
-  total_samples: 300
-  n_train_samples: 250
-  n_valid_samples: 50
-  shuffle: True
-  time_interval: .5
-train_params:
-  loss_formulation: lagrangian
-  base_lr: 0.001
-  batchsize: 1
-  tts_batchsize: 0
-  cg_tolerance: 0.0001
-  epochs: 1
-  f_loss: 1.0
-  ic_loss: 5
-  xy_loss: 10
-  mixed_loss: 2
-  lr_max: 0.01
-  lr_min: 0.001
-  acgd_beta: .99
-  milestones: [150, 300, 450]
-  scheduler_gamma: 0.5
+  save_name: stoic-glitter-18-1msmjfti
+  walltime: 2400
 lr_scheduling:
   decay:
     decay_rate: 0.5
@@ -72,3 +50,71 @@ lr_scheduling:
     scheduler_gamma: 0.5
   params:
   - lr_max
+model_1:
+  activation: gelu
+  fc_dim: 128
+  layers:
+  - 64
+  - 64
+  - 64
+  - 64
+  - 64
+  modes1:
+  - 8
+  - 8
+  - 8
+  - 8
+  modes2:
+  - 8
+  - 8
+  - 8
+  - 8
+  modes3:
+  - 8
+  - 8
+  - 8
+  - 8
+  pad_ratio: 0.0625
+model_2:
+  activation: gelu
+  competitive_output:
+  - f
+  - ic
+  fc_dim: 64
+  layers:
+  - 64
+  modes1:
+  - 8
+  modes2:
+  - 8
+  modes3:
+  - 8
+  pad_ratio: 0.0625
+num_params: 67138883
+test:
+  batchsize: 1
+  ckpt: model-400.pt
+  data_res:
+  - 256
+  - 256
+  - 513
+train_params:
+  acgd_beta: 0.99
+  base_lr: 0.001
+  batchsize: 1
+  cg_tolerance: 0.0001
+  epochs: 10
+  f_loss: 1.0
+  ic_loss: 10
+  loss_formulation: lagrangian
+  lr_max: 0.01
+  lr_min: 0.001
+  milestones:
+  - 150
+  - 300
+  - 450
+  mixed_loss: 2
+  scheduler_gamma: 0.5
+  tts_batchsize: 0
+  xy_loss: 50
+  eval_step: 2000

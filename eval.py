@@ -2,19 +2,13 @@ from time import time
 import yaml
 import torch
 from argparse import ArgumentParser
-from train_utils.problem import wave1D, NS3D, Loss
 import wandb
-from tqdm import tqdm
 import os
 
-from model.Competitive import CPINO, CPINN, CPINO_SPLIT
-from model.SAweights import SAPINN, SAPINO
-from model.PINN import PINN
-from model.PINO import PINO
-
 from pprint import pprint
-import matplotlib.pyplot as plt
 from time import time
+
+from train import setup_loss, setup_model, setup_problem, eval_loss
 
 def update_loss_dict(total, cur): 
     cur["loss"] = cur["loss"].item()
@@ -53,16 +47,6 @@ def logger(dict, run=None, prefix='train'):
         wandb.log(new)
     return None
 
-def eval_loss(loader, model, loss): 
-    total_loss = {}
-    model.eval()
-    for x, y in loader: 
-        x, y = x.to(device), y.to(device)
-        output = model.predict(x)
-        cur_loss = loss(x, output, y)
-        total_loss = update_loss_dict(total_loss, cur_loss)
-    total_loss = loss_metrics(total_loss) 
-    return total_loss
 
 
 if __name__ == '__main__':
@@ -78,28 +62,10 @@ if __name__ == '__main__':
     print(f"using device: {device}")
 
     print('loading data')
-    match config['info']['name']: 
-        case "wave1D": 
-            problem = wave1D(config)
-        case "NS":
-            problem = NS3D(config)
+    problem = setup_problem(config)
     print('data is loaded')
 
-    match config['info']['model']: 
-        case "CPINO":
-            model = CPINO(config)
-        case "CPINO-split":
-            model = CPINO_SPLIT(config)
-        case "CPINN": 
-            model = CPINN(config)
-        case "SAPINO":
-            model = SAPINO(config)
-        case "SAPINN": 
-            model = SAPINN(config)
-        case "PINO":
-            model = PINO(config)
-        case "PINN":
-            model = PINN(config)
+    
         
 
     name = config['info']['save_name']
@@ -112,19 +78,15 @@ if __name__ == '__main__':
         
 
     save_path = os.path.join(config['info']['save_dir'], config['info']['save_name'])
-
+    model = setup_model(config)
     model.load(save_path)
+    
     model.eval()
-    epochs = config['train_params']['epochs']
-    test_loader = problem.test_loader
+    test_loader = problem.val_loader
 
-    if config['info']['name'] == 'NS': 
-        loss = Loss(config, problem.physics_truth, forcing=problem.test_forcing, 
-            v=problem.v, t_interval=problem.test_t_interval)
-    else: 
-         loss = Loss(config, problem.physics_truth)    
+    loss = setup_loss(config, problem)  
 
-    test_loss = eval_loss(problem.test_loader, model, loss)
+    test_loss = eval_loss(test_loader, model)
     print(test_loss)
     
     logger(test_loss, run, prefix='test')

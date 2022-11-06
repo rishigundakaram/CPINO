@@ -3,12 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from CGDs import GACGD
+from CGDs import GACGD, ACGD
 
 from .PINO import FNN2d, FNN3d
 from .basics import Model
 from train_utils.adam import Adam, NAdam
 from .PINN import simpleLinear
+from .utils import count_params
 
 
 
@@ -66,17 +67,26 @@ class CPINO(Model):
             ).to(device)
 
         train_params = params['train_params']
-        self.optimizer = GACGD(x_params=self.Discriminator.parameters(), 
-                        y_params=self.model.parameters(), 
-                        lr_x=train_params['lr_min'], 
-                        lr_y=train_params['lr_max'], 
-                        tol=train_params["cg_tolerance"], 
-                        beta=train_params['acgd_beta'])
+        # self.optimizer = GACGD(x_params=self.Discriminator.parameters(), 
+        #                 y_params=self.model.parameters(), 
+        #                 lr_x=train_params['lr_min'], 
+        #                 lr_y=train_params['lr_max'], 
+        #                 tol=train_params["cg_tolerance"], 
+        #                 beta=train_params['acgd_beta'])
+        self.optimizer = ACGD(
+            max_params=self.Discriminator.parameters(), 
+            min_params=self.model.parameters(), 
+            lr_max=train_params['lr_min'], 
+            lr_min=train_params['lr_max'], 
+            tol=train_params["cg_tolerance"], 
+            beta=train_params['acgd_beta']
+            )
             
     def __call__(self, x):
         return self.model(x)
 
     def step(self, loss): 
+        # self.optimizer.step(loss_x=loss["loss_x"], loss_y=loss["loss_y"])
         self.optimizer.step(loss=loss["loss"])
         self.optimizer.zero_grad()
 
@@ -88,11 +98,9 @@ class CPINO(Model):
         self.model.eval()
         self.Discriminator.eval()
 
-    def predict(self, x): 
-        out = self.model(x)
-        print(out.size())
-        out_w = self.Discriminator(x)
-        print(out_w.size())
+    def predict(self, a): 
+        out = self.model(a)
+        out_w = self.Discriminator(a)
         ret = {}
         ret["output"] = out
         if self.dim == 3: 
@@ -100,9 +108,9 @@ class CPINO(Model):
             ret["f_weights"] = out_w[..., 1:-1, :, 1]
             if self.formulation == 'competitive':
                 ret["data_weights"] = out_w[..., :, 2]
-        else: 
-            ret["ic_weights"] = out_w[..., 0,0]
-            ret["f_weights"] = out_w[..., 1:-1, 1]
+        else:
+            ret["ic_weights"] = out_w[...,0]
+            ret["f_weights"] = out_w[..., 1:-1]
             if self.formulation == 'competitive':
                 ret["data_weights"] = out_w[..., :, 2]
         return ret
@@ -116,6 +124,9 @@ class CPINO(Model):
         super().load(path)
         path = path + '-opt' + '.pt'
         self.optimizer.load_state_dict(torch.load(path))
+    
+    def count_params(self):
+        return count_params(self.model) + count_params(self.Discriminator)
 
 class CPINN(Model): 
     def __init__(self, params) -> None:
@@ -130,7 +141,7 @@ class CPINN(Model):
             self.Discriminator = simpleLinear(outdim=3, layers=params['model_2']['layers']).to(device)
 
         train_params = params['train_params']
-        self.optimizer = ACGD(max_params=self.Discriminator.parameters(), 
+        self.optimizer = GACGD(max_params=self.Discriminator.parameters(), 
                         min_params=self.model.parameters(), 
                         lr_min=train_params['lr_min'], 
                         lr_max=train_params['lr_max'], 

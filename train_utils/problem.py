@@ -290,31 +290,33 @@ class KF(problem):
         super().__init__(config)
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         train_config = config['data']
-        dataset = KFDataset(
-            paths=config['data']['paths'], 
-            raw_res=config['data']['raw_res'],
-            data_res=config['data']['data_res'], 
-            pde_res=config['data']['pde_res'], 
-            n_samples=config['data']['total_samples'], 
-            offset=0, 
-            t_duration=config['data']['time_interval']
-            )
-        
-        idxs = torch.randperm(len(dataset))
-        # setup train and test
-        num_valid = config['data']['n_valid_samples']
-        num_train = len(idxs) - num_valid
-        print(f'Number of training samples: {num_train};\nNumber of validation samples: {num_valid}.')
-        train_idx = idxs[:num_train]
-        test_idx = idxs[num_train:]
-
-        trainset = Subset(dataset, indices=train_idx)
-        valset = Subset(dataset, indices=test_idx)
-        
         batchsize = config['train_params']['batchsize']
-        self.train_loader = DataLoader(trainset, batch_size=batchsize, num_workers=4, shuffle=True)
+        u_set = KFDataset(paths=config['data']['paths'], 
+                          raw_res=config['data']['raw_res'],
+                          data_res=config['data']['data_res'], 
+                          pde_res=config['data']['data_res'], 
+                          n_samples=config['data']['n_data_samples'], 
+                          offset=config['data']['offset'], 
+                          t_duration=config['data']['t_duration'])
+        self.u_loader = DataLoader(u_set, batch_size=batchsize, num_workers=1, shuffle=True)
 
-        self.valid_loader = DataLoader(valset, batch_size=batchsize, num_workers=4)
+        a_set = KFaDataset(paths=config['data']['paths'], 
+                           raw_res=config['data']['raw_res'], 
+                           pde_res=config['data']['pde_res'], 
+                           n_samples=config['data']['n_a_samples'],
+                           offset=config['data']['a_offset'], 
+                           t_duration=config['data']['t_duration'])
+        self.a_loader = DataLoader(a_set, batch_size=batchsize, num_workers=1, shuffle=True)
+        # val set
+        valset = KFDataset(paths=config['data']['paths'], 
+                           raw_res=config['data']['raw_res'],
+                           data_res=config['test']['data_res'], 
+                           pde_res=config['test']['data_res'], 
+                           n_samples=config['data']['n_test_samples'], 
+                           offset=config['data']['testoffset'], 
+                           t_duration=config['data']['t_duration'])
+        self.val_loader = DataLoader(valset, batch_size=1, num_workers=1)
+        print(f'Train set: {len(u_set)}; Test set: {len(valset)}; IC set: {len(a_set)}')
         nx = config['data']['pde_res'][0]
         nt = config['data']['pde_res'][2]
         if config['train_params']['tts_batchsize'] > 0: 
@@ -323,13 +325,13 @@ class KF(problem):
             self.tts_loader = online_loader(tts_sampler,
                              S=nx,
                              T=nt,
-                             time_scale=config['data']['time_interval'],
+                             time_scale=config['data']['t_duration'],
                              batchsize=config['train_params']['tts_batchsize'])
         self.v = 1 / config['data']['Re']
         self.forcing = get_forcing(nx).to(device)
         print(self.forcing.size())
         self.physics_truth = PINO_FDM
-        self.train_t_interval = train_config['time_interval']
+        self.train_t_interval = train_config['t_duration']
 
 class KFDataset(Dataset):
     def __init__(self, paths, 
@@ -358,8 +360,7 @@ class KFDataset(Dataset):
 
     def load(self):
         datapath = self.paths[0]
-        raw_data = np.load(datapath, mmap_mode='r+')
-        print(np.shape(raw_data))
+        raw_data = np.load(datapath, mmap_mode='r')
         # subsample ratio
         sub_x = self.raw_res[0] // self.data_res[0]
         sub_t = (self.raw_res[2] - 1) // (self.data_res[2] - 1)
@@ -367,7 +368,6 @@ class KFDataset(Dataset):
         a_sub_x = self.raw_res[0] // self.pde_res[0]
         # load data
         data = raw_data[self.offset: self.offset + self.n_samples, ::sub_t, ::sub_x, ::sub_x]
-        print(np.shape)
         # divide data
         if self.t_duration != 0.:
             end_t = self.raw_res[2] - 1
@@ -413,8 +413,61 @@ class KFDataset(Dataset):
             self.grid, 
             self.a_data[idx].repeat(1, 1, self.T, 1)
         ), dim=-1)
-        return a_data, self.data[idx], 
+        return self.data[idx], a_data
 
     def __len__(self, ):
         return self.data.shape[0]
 
+class KFaDataset(Dataset):
+    def __init__(self, paths, 
+                 pde_res, 
+                 raw_res, 
+                 n_samples=None, 
+                 offset=0,
+                 t_duration=1.0):
+        super().__init__()
+        self.pde_res = pde_res      # pde loss resolution
+        self.raw_res = raw_res      # raw data resolution
+        self.t_duration = t_duration
+        self.paths = paths
+        self.offset = offset
+        self.n_samples = n_samples
+        if t_duration == 1.0:
+            self.T = self.pde_res[2]
+        else:
+            self.T = int(self.pde_res[2] * t_duration) + 1    # number of points in time dimension
+
+        self.load()
+
+    def load(self):
+        datapath = self.paths[0]
+        raw_data = np.load(datapath, mmap_mode='r')
+        # subsample ratio
+        a_sub_x = self.raw_res[0] // self.pde_res[0]
+        # load data
+        if self.t_duration != 0.:
+            end_t = self.raw_res[2] - 1
+            K = int(1/self.t_duration)
+            step = end_t // K
+            a_data = raw_data[self.offset: self.offset + self.n_samples, 0:end_t:step, ::a_sub_x, ::a_sub_x]
+            a_data = a_data.reshape(self.n_samples * K, 1, self.pde_res[0], self.pde_res[1])    # 2N x 1 x S x S
+        else:
+            a_data = raw_data[self.offset: self.offset + self.n_samples, 0:1, ::a_sub_x, ::a_sub_x]
+
+        # convert into torch tensor
+        a_data = torch.from_numpy(a_data).to(torch.float32).permute(0, 2, 3, 1)
+        S = self.pde_res[1]
+        a_data = a_data[:, :, :, :, None]   # N x S x S x 1 x 1
+        gridx, gridy, gridt = get_grid3d(S, self.T)
+        self.grid = torch.cat((gridx[0], gridy[0], gridt[0]), dim=-1)   # S x S x T x 3
+        self.a_data = a_data
+
+    def __getitem__(self, idx):
+        a_data = torch.cat((
+            self.grid, 
+            self.a_data[idx].repeat(1, 1, self.T, 1)
+        ), dim=-1)
+        return a_data
+
+    def __len__(self, ):
+        return self.a_data.shape[0]

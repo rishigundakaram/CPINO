@@ -33,3 +33,9 @@ def _get_act(act):
     else:
         raise ValueError(f'{act} is not supported')
     return func
+
+def count_params(net):
+    count = 0
+    for p in net.parameters():
+        count += p.numel()
+    return count

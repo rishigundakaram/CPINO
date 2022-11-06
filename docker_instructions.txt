@@ -1,4 +1,4 @@
 docker build -t cpino:dev .
 cd ..
 docker run -it --name cpino --gpus=all --rm  -u 0 --volume /:/src cpino:dev /bin/bash
-docker run -it --name cpino --gpus=all --rm  -u 0 --volume /:projects/ cpino:dev python /projects/CPINO/train.py --log --config_path /projects/CPINO/experiments/runs/mixed_IC/configs/NS3D-01.yaml 
+wandb docker-run -it --name cpino --gpus "device=0" --rm  -u 0 --volume /:/src cpino:dev python /src/home/rishi/projects/CPINO/train.py --log --config /src/home/rishi/projects/CPINO/experiments/base_configs/KF.yaml  

@@ -94,9 +94,25 @@ def FDM_NS_vorticity(w, v=1/40, t_interval=1.0):
     Du1 = wt + (ux*wx + uy*wy - v*wlap)[...,1:-1] #- forcing
     return Du1
 
+def PINO_loss3d(u, u0, forcing, v=1/40, t_interval=1.0):
+    batchsize = u.size(0)
+    nx = u.size(1)
+    ny = u.size(2)
+    nt = u.size(3)
+
+    u = u.reshape(batchsize, nx, ny, nt)
+    lploss = LpLoss(size_average=True)
+
+    u_in = u[:, :, :, 0]
+    loss_ic = lploss(u_in, u0)
+
+    Du = FDM_NS_vorticity(u, v, t_interval)
+    f = forcing.repeat(batchsize, 1, 1, nt-2)
+    loss_f = lploss(Du, f)
+
+    return loss_ic, loss_f
 
 def PINO_FDM(u, u0, forcing=None, v=1/40, t_interval=1.0, **kwargs):
-    u0 = u0[:, :, :, 0, -1]
     batchsize = u.size(0)
     nx = u.size(1)
     ny = u.size(2)
@@ -120,8 +136,6 @@ class Loss():
         self.formulation = config['train_params']['loss_formulation']
         self.lploss = LpLoss()
         self.kwargs = kwargs
-        self.data_s_step = kwargs['data_s_step']
-        self.data_t_step = kwargs['data_t_step']
         self.p = p
 
     def physics_loss(self, u, u0): 
@@ -132,8 +146,7 @@ class Loss():
     
     def w_physics_loss(self, u, u0, ic_weights, f_weights): 
         ic_truth, ic_pred, f_truth, f_pred = self.physics(u, u0, **self.kwargs)
-        print(ic_truth.size(), ic_pred.size(), ic_weights.size())
-        print(f_truth.size(), f_pred.size(), f_weights.size())
+        
         if self.model == "SAPINO" or self.model == "SAPINN": 
             ic_loss_w = self.lploss(ic_truth, ic_pred, weights=ic_weights)
         else: 
@@ -147,33 +160,37 @@ class Loss():
         
     def __call__(self, input, prediction, target=None):
         output = prediction["output"]
+        pde_output = prediction["pde_output"]
         loss = {}
         data_loss = 0
         ic_loss = 0
         f_loss = 0
         
-        ic_loss, f_loss = self.physics_loss(output, input)
+        ic_loss, f_loss = self.physics_loss(pde_output, input)
         loss["ic loss"] = ic_loss.item()
         loss["f loss"] = f_loss.item()
         
         if target is not None: 
-            data_output = output[:, ::self.data_s_step, ::self.data_s_step, ::self.data_t_step]
-            data_loss = self.lploss.rel(data_output, target)
+            data_loss = self.lploss.rel(output, target)
             loss["data loss"] = data_loss.item()
         
         if "SA" in self.model or "C" in self.model:
+            
             ic_weights = prediction["ic_weights"]
             f_weights = prediction["f_weights"]
             if self.formulation == 'competitive': 
                 data_weights = prediction['data_weights']
-                data_loss = self.cLoss(output, target, weights=data_weights)
+                data_loss = self.cLoss(pde_output, target, weights=data_weights)
                 loss["weighted data loss"] = data_loss.item()
             
             ic_loss, f_loss = self.w_physics_loss(
-                output, input, ic_weights, f_weights
+                pde_output, input, ic_weights, f_weights
                 )
             loss["weighted f err"] =  f_loss.item()
             loss["weighted ic err"] = ic_loss.item()
+            # loss["loss_x"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss
+            # loss["loss_y"] = self.ic_weight * ic_loss + self.f_weight * f_loss
+            # return loss
         loss["loss"] = self.ic_weight * ic_loss + self.f_weight * f_loss + self.data_weight * data_loss
         return loss
     

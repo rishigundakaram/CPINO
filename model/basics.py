@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from functools import partial
+from .utils import count_params
 
 
 @torch.jit.script
@@ -238,5 +239,8 @@ class Model:
     def load(self, path): 
         name = path + '.pt'
         self.model.load_state_dict(torch.load(name))
+    
+    def count_params(self): 
+        return count_params(self.model)
 
     

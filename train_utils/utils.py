@@ -100,3 +100,8 @@ def online_loader(sampler, S, T, time_scale, batchsize=1):
                        S, T,
                        time_scale=time_scale)
         yield a
+        
+def sample_data(loader):
+    while True:
+        for batch in loader:
+            yield batch
