@@ -55,7 +55,7 @@ def dict_to_str(dict):
 
 def logger(dict, run=None, prefix='train'): 
     new = {}
-    for key, value in dict.items(): 
+    for key, value in dict.items():
         new[prefix + ' ' + key] = value
         if prefix == 'test': 
             run.summary[prefix + ' ' + key] = value
@@ -281,7 +281,7 @@ def main(config, problem, log=False):
             # total_loss = mixed_train(update_loss_dict, loss_metrics, device, model, train_loader, tts_loader, loss)
         if log: 
             logger(total_loss, prefix='train')
-        pbar.set_description(dict_to_str(total_loss))
+        # pbar.set_description(dict_to_str(total_loss))
         elapsed = time() - start_time
         if runtime_min != 0 and elapsed > runtime_min * 60: 
             break
@@ -289,6 +289,7 @@ def main(config, problem, log=False):
         if config['data']['n_test_samples'] > 0 and ep % eval_step == 0:
             model.eval()
             valid_loss = eval_loss(val_loader, model)
+            print(valid_loss)
             model.train()
             if log:
                 logger(valid_loss, prefix='valid')

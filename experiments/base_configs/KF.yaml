@@ -34,7 +34,7 @@ info:
   model: CPINO
   name: KF
   project: KF
-  save_dir: /src/home/rishi/projects/CPINO/experiments/runs/KF
+  save_dir: /src/home/rishi/projects/CPINO/experiments/runs/KF/checkpoints
   save_name: stoic-glitter-18-1msmjfti
   walltime: 2400
 lr_scheduling:
