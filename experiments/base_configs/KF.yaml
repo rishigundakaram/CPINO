@@ -76,7 +76,7 @@ model_1:
   - 8
   pad_ratio: 0.0625
 model_2:
-  activation: gelu
+  activation: tanh
   competitive_output:
   - f
   - ic

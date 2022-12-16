@@ -6,7 +6,7 @@ import wandb
 from tqdm import tqdm
 import os
 
-from model.Competitive import CPINO, CPINN, CPINO_SPLIT
+from model.Competitive import CPINO, CPINN, CPINO_SPLIT, CPINO_SIMGD
 from model.SAweights import SAPINN, SAPINO
 from model.PINN import PINN
 from model.PINO import PINO
@@ -14,7 +14,7 @@ from model.PINO import PINO
 from train_utils.problem import wave1D, NS3D, KF
 from train_utils.loss import Loss, Mixed_Loss, LpLoss, PINO_loss3d, PINO_FDM
 from train_utils.schedulers import decay_schedule, no_schedule
-from train_utils.utils import get_forcing, sample_data
+from train_utils.utils import get_forcing, sample_data, Plotter
 
 
 from time import time
@@ -64,20 +64,23 @@ def logger(dict, run=None, prefix='train'):
     return None
 
 
-def eval_loss(loader, model): 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    model.eval()
-    lploss = LpLoss()
-    val_err = []
-    for u, a in loader: 
-        u, a = u.to(device), a.to(device)
-        output = model(a)
+def eval_loss(loader, model, plotter): 
+    with torch.no_grad(): 
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        model.eval()
+        lploss = LpLoss()
+        val_err = []
         
-        val_err.append(lploss(output, u).item())
-    
-    N = len(loader)
-    avg_err = np.mean(val_err)
-    std_err = np.std(val_err, ddof=1) / np.sqrt(N)
+        for idx, (u, a) in enumerate(loader): 
+            u, a = u.to(device), a.to(device)
+            output = model.predict(a)
+            if idx == 0: 
+                plotter.step(output, u, a)
+            val_err.append(lploss(output["output"], u).item())
+        
+        N = len(loader)
+        avg_err = np.mean(val_err)
+        std_err = np.std(val_err, ddof=1) / np.sqrt(N)
     return {"loss": avg_err, "std err loss": std_err}
 
 def check_early_stopping(prev_metric, cur_metric, cur_epoch, min_epochs, cur_patience, patience, delta): 
@@ -105,6 +108,7 @@ def train(config, device, model, u_loader, a_loader, forcing):
     
     v = 1/ config['data']['Re']
     t_duration = config['data']['t_duration']
+    plotter = Plotter(forcing, v, t_duration)
     if xy_weight > 0:
             u, a_in = next(u_loader)
             u = u.to(device)
@@ -124,6 +128,7 @@ def train(config, device, model, u_loader, a_loader, forcing):
         a = a.to(device)
         out = model.predict(a)
         
+        
         u0  = a[:, :, :, 0, -1]
         ic_loss, f_loss = PINO_loss3d(out["output"], u0, forcing, v, t_duration)
         total_loss['ic loss'] = ic_loss.item()
@@ -138,8 +143,9 @@ def train(config, device, model, u_loader, a_loader, forcing):
         ic_loss = f_loss = 0.0
 
     total_loss["loss"] = data_loss * xy_weight + f_loss * f_weight + ic_loss * ic_weight
-    print(total_loss)
     model.step(total_loss)
+    total_loss["loss"] = total_loss["loss"].item()
+    print(model.optimizer.get_info())
     return total_loss
 
 # def train(update_loss_dict, loss_metrics, device, model, u_loader, a_loader, loss):
@@ -191,6 +197,8 @@ def setup_model(config):
         model = CPINO(config)
     elif config['info']['model'] == "CPINO-split": 
         model = CPINO_SPLIT(config)
+    elif config['info']['model'] == "CPINO-simgd": 
+        model = CPINO_SIMGD(config)
     elif config['info']['model'] == "CPINN": 
         model = CPINN(config)
     elif config['info']['model'] == "SAPINO": 
@@ -271,24 +279,29 @@ def main(config, problem, log=False):
     # saves model when script finishes
     atexit.register(end, save_path=save_path, model=model)
     eval_step = config["train_params"]['eval_step']
+    
+    v = 1/ config['data']['Re']
+    t_duration = config['data']['t_duration']
+    forcing_eval = get_forcing(config['data']['raw_res'][0]).to(device)
+    plotter = Plotter(forcing_eval, v, t_duration)
     for ep in pbar: 
+        valid_loss = eval_loss(val_loader, model, plotter)
         if tts_batchsize == 0: 
             total_loss = train(config, device, model, u_loader, a_loader, forcing)
-            print(total_loss)
         else: 
             raise (ValueError)        
         # elif tts_batchsize > 0: 
             # total_loss = mixed_train(update_loss_dict, loss_metrics, device, model, train_loader, tts_loader, loss)
         if log: 
             logger(total_loss, prefix='train')
-        # pbar.set_description(dict_to_str(total_loss))
+        pbar.set_description(dict_to_str(total_loss))
         elapsed = time() - start_time
         if runtime_min != 0 and elapsed > runtime_min * 60: 
             break
         
         if config['data']['n_test_samples'] > 0 and ep % eval_step == 0:
             model.eval()
-            valid_loss = eval_loss(val_loader, model)
+            valid_loss = eval_loss(val_loader, model, plotter)
             print(valid_loss)
             model.train()
             if log:

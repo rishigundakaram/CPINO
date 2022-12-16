@@ -18,8 +18,7 @@ class CPINO(Model):
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         model_1_params = params['model_1']
         model_2_params = params['model_2']
-        self.dim = 4
-        # self.dim = 4 if 'modes3' in model_1_params else 3
+        self.dim = 4 if 'modes3' in model_1_params else 3
         self.formulation = params['train_params']['loss_formulation']
             
         if self.formulation == 'lagrangian':
@@ -79,7 +78,8 @@ class CPINO(Model):
             lr_max=train_params['lr_min'], 
             lr_min=train_params['lr_max'], 
             tol=train_params["cg_tolerance"], 
-            beta=train_params['acgd_beta']
+            beta=train_params['acgd_beta'],
+            collect_info=True
             )
             
     def __call__(self, x):
@@ -272,8 +272,9 @@ class CPINO_SIMGD(Model):
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         model_1_params = params['model_1']
         model_2_params = params['model_2']
-        self.dim = 4 if 'modes3' in model_1_params else 3
-        self.formulation = params['info']['formulation']
+        self.dim = 4
+        # self.dim = 4 if 'modes3' in model_1_params else 3
+        self.formulation = params['train_params']['loss_formulation']
             
         if self.formulation == 'lagrangian':
             discriminator_out_dim = 2 
@@ -287,7 +288,8 @@ class CPINO_SIMGD(Model):
                 fc_dim=model_1_params['fc_dim'], 
                 layers=model_1_params['layers'],
                 in_dim=self.dim, 
-                out_dim=1
+                out_dim=1,
+                pad_ratio=model_1_params['pad_ratio']
             ).to(device)
             self.Discriminator = FNN3d(
                 modes1=model_2_params['modes1'], 
@@ -297,6 +299,7 @@ class CPINO_SIMGD(Model):
                 layers=model_2_params['layers'],
                 in_dim=self.dim, 
                 out_dim=discriminator_out_dim,
+                pad_ratio=model_1_params['pad_ratio']
             ).to(device)
         else:
             self.model = FNN2d(
@@ -317,6 +320,7 @@ class CPINO_SIMGD(Model):
                 out_dim=discriminator_out_dim,
             ).to(device)
 
+        train_params = params['train_params']
         self.min_optimizer = Adam(self.model.parameters(), betas=(0.9, 0.999),
                      lr=params['train_params']['lr_min'])
         self.max_optimizer = NAdam(self.Discriminator.parameters(), betas=(0.9, 0.999),
@@ -340,9 +344,9 @@ class CPINO_SIMGD(Model):
         self.model.eval()
         self.Discriminator.eval()
 
-    def predict(self, x): 
-        out = self.model(x)
-        out_w = self.Discriminator(x)
+    def predict(self, a): 
+        out = self.model(a)
+        out_w = self.Discriminator(a)
         ret = {}
         ret["output"] = out
         if self.dim == 3: 
@@ -350,16 +354,29 @@ class CPINO_SIMGD(Model):
             ret["f_weights"] = out_w[..., 1:-1, :, 1]
             if self.formulation == 'competitive':
                 ret["data_weights"] = out_w[..., :, 2]
-        else: 
-            ret["ic_weights"] = out_w[..., 0,0]
-            ret["f_weights"] = out_w[..., 1:-1, 1]
+        else:
+            ret["ic_weights"] = out_w[...,0]
+            ret["f_weights"] = out_w[..., 1:-1]
             if self.formulation == 'competitive':
                 ret["data_weights"] = out_w[..., :, 2]
         return ret
     
     def save(self, path):
         super().save(path)
-        torch.save(self.optimizer.state_dict())
+        min_path = path + '-min-opt' + '.pt'
+        torch.save(self.min_optimizer.state_dict(), min_path)
+        max_path = path + '-max-opt' + '.pt'
+        torch.save(self.max_optimizer.state_dict(), max_path)
+    
+    def load(self, path):
+        super().load(path)
+        min_path = path + '-min-opt' + '.pt'
+        self.min_optimizer.load_state_dict(torch.load(min_path))
+        max_path = path + '-max-opt' + '.pt'
+        self.max_optimizer.load_state_dict(torch.load(max_path))
+        
+    def count_params(self):
+        return count_params(self.model) + count_params(self.Discriminator)
 
 class CPINO_ALTGD(Model): 
     def __init__(self, params) -> None:
